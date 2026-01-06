@@ -94,9 +94,15 @@ export function encode(smiles) {
       }
       const nextChar = smiles[i]
       if (isUpperCase(nextChar)) {
-        // Single uppercase letter element with double bond
-        tokens.push(`[=${nextChar}]`)
-        i++
+        // Check for two-letter element
+        if (i + 1 < smiles.length && isLowerCase(smiles[i + 1])) {
+          tokens.push(`[=${nextChar}${smiles[i + 1]}]`)
+          i += 2
+        } else {
+          // Single uppercase letter element with double bond
+          tokens.push(`[=${nextChar}]`)
+          i++
+        }
       } else if (isLowerCase(nextChar)) {
         // Aromatic element with double bond
         tokens.push(`[=${nextChar.toUpperCase()}]`)
@@ -112,11 +118,51 @@ export function encode(smiles) {
       }
       const nextChar = smiles[i]
       if (isUpperCase(nextChar)) {
-        tokens.push(`[#${nextChar}]`)
-        i++
+        // Check for two-letter element
+        if (i + 1 < smiles.length && isLowerCase(smiles[i + 1])) {
+          tokens.push(`[#${nextChar}${smiles[i + 1]}]`)
+          i += 2
+        } else {
+          tokens.push(`[#${nextChar}]`)
+          i++
+        }
       } else {
         throw new Error(`Invalid SMILES: unexpected character after #: ${nextChar}`)
       }
+    } else if (char === '[') {
+      // Bracket atom notation like [nH], [NH2+], [C@@H], etc.
+      const closeBracket = smiles.indexOf(']', i)
+      if (closeBracket === -1) {
+        throw new Error('Invalid SMILES: unclosed bracket atom')
+      }
+      const bracketContent = smiles.substring(i + 1, closeBracket)
+      // For now, just extract the element and pass through
+      // TODO: Handle charges, hydrogens, stereo properly
+
+      // Try to match element at start (uppercase followed by optional lowercase)
+      let elementMatch = bracketContent.match(/^([A-Z][a-z]?)/)
+      if (!elementMatch) {
+        // Try lowercase element (aromatic)
+        elementMatch = bracketContent.match(/^([a-z]+)/)
+        if (elementMatch) {
+          // Convert to uppercase for SELFIES
+          const element = elementMatch[1].charAt(0).toUpperCase() + elementMatch[1].slice(1)
+          tokens.push(`[${element}]`)
+          i = closeBracket + 1
+          continue
+        }
+      }
+
+      if (elementMatch) {
+        tokens.push(`[${elementMatch[1]}]`)
+      } else {
+        // Fallback: just use first letter
+        const firstLetter = bracketContent.match(/[A-Za-z]/)
+        if (firstLetter) {
+          tokens.push(`[${firstLetter[0].toUpperCase()}]`)
+        }
+      }
+      i = closeBracket + 1
     } else if (isUpperCase(char)) {
       // Check for two-letter element (Cl, Br, etc.)
       if (i + 1 < smiles.length && isLowerCase(smiles[i + 1])) {
