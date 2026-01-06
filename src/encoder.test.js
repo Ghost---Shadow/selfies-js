@@ -8,35 +8,40 @@ import { encode } from '../src/encoder.js'
 
 describe('encode', () => {
   // TODO: Basic molecules (POST-MVP)
-  test.skip('encodes methane', () => {
-    // TODO: expect(encode('C')).toBe('[C]')
+  test('encodes methane', () => {
+    expect(encode('C')).toBe('[C]')
   })
 
-  test.skip('encodes ethane', () => {
-    // TODO: expect(encode('CC')).toBe('[C][C]')
+  test('encodes ethane', () => {
+    expect(encode('CC')).toBe('[C][C]')
   })
 
-  test.skip('encodes ethanol', () => {
-    // TODO: expect(encode('CCO')).toBe('[C][C][O]')
+  test('encodes ethanol', () => {
+    expect(encode('CCO')).toBe('[C][C][O]')
   })
 
   // TODO: Bond orders (POST-MVP)
-  test.skip('encodes ethene', () => {
-    // TODO: expect(encode('C=C')).toBe('[C][=C]')
+  test('encodes ethene', () => {
+    expect(encode('C=C')).toBe('[C][=C]')
   })
 
-  test.skip('encodes acetylene', () => {
-    // TODO: expect(encode('C#C')).toBe('[C][#C]')
+  test('encodes acetylene', () => {
+    expect(encode('C#C')).toBe('[C][#C]')
   })
 
   // TODO: Branches (POST-MVP)
-  test.skip('encodes isobutane', () => {
-    // TODO: expect(encode('CC(C)C')).toBe('[C][C][Branch1][C][C][C]')
+  test('encodes isobutane', () => {
+    expect(encode('CC(C)C')).toBe('[C][C][Branch1][C][C][C]')
   })
 
   // TODO: Rings (POST-MVP)
-  test.skip('encodes benzene', () => {
-    // TODO: expect(encode('c1ccccc1')).toContain('[Ring1]')
+  test('encodes benzene', () => {
+    // Note: Using lowercase aromatic SMILES for benzene
+    expect(encode('c1ccccc1')).toBe('[C][=C][C][=C][C][=C][Ring1][N]')
+  })
+
+  test('encodes cyclopropane', () => {
+    expect(encode('C1CC1')).toBe('[C][C][C][Ring1][C]')
   })
 
   // TODO: Error cases (POST-MVP)
