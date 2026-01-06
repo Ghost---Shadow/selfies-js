@@ -104,3 +104,28 @@ function buildStructuralTokens() {
   // - Numeric tokens used as length specifiers
   throw new Error('Not implemented')
 }
+
+/**
+ * Extracts the unique SELFIES alphabet from a collection of SELFIES strings
+ * @param {Iterable<string>} selfiesIterable - Collection of SELFIES strings
+ * @returns {Set<string>} Set of unique SELFIES symbols found
+ *
+ * Based on selfies-py's get_alphabet_from_selfies() function.
+ *
+ * Example:
+ *   const alphabet = getAlphabetFromSelfies(['[C][C][O]', '[N][C][=O]'])
+ *   // Set { '[C]', '[O]', '[N]', '[=O]' }
+ *
+ * Reference: selfies-py/selfies/utils/selfies_utils.py::get_alphabet_from_selfies()
+ */
+export function getAlphabetFromSelfies(selfiesIterable) {
+  // TODO: Implement alphabet extraction
+  // Algorithm:
+  // 1. Create empty Set
+  // 2. For each SELFIES string in iterable:
+  //    a. Tokenize it
+  //    b. Add each token to the Set
+  // 3. Return the Set
+  // Note: Uses Set for automatic deduplication
+  throw new Error('Not implemented')
+}

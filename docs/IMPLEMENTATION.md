@@ -110,14 +110,31 @@ definition := NAME EQUALS SELFIES_TOKEN+ NEWLINE
 
 ## Testing Strategy
 
+### Test Organization
+
+Tests are organized in two ways:
+
+1. **Unit tests**: Located alongside source files
+   - `src/tokenizer.js` → `src/tokenizer.test.js`
+   - `src/decoder.js` → `src/decoder.test.js`
+   - `src/properties/atoms.js` → `src/properties/properties.test.js`
+   - etc.
+
+2. **Integration & fixtures**: Located in `test/` directory
+   - `test/integration.test.js` - Full workflow tests
+   - `test/known-issues.test.js` - Edge cases and known bugs
+   - `test/fixtures/` - Test data files
+
+### Testing Workflow
+
 1. Start with tokenizer tests - these are simplest
 2. Add parser tests with IR validation
 3. Add decoder tests using molecules.json fixtures
 4. Add property calculation tests
 5. Add DSL tests with fixture programs
-6. Add integration tests
+6. Add integration tests for full workflows
 
-Run tests with: `bun test`
+Run tests with: `bun test` (automatically discovers all `*.test.js` files)
 
 ## Performance Targets
 

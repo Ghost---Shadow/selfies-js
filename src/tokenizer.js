@@ -39,3 +39,26 @@ export function join(tokens) {
   // Simple concatenation of tokens
   throw new Error('Not implemented')
 }
+
+/**
+ * Counts the number of SELFIES symbols (not character length)
+ * @param {string} selfies - The SELFIES string
+ * @returns {number} Number of symbols
+ *
+ * This is more efficient than tokenize().length as it just counts '[' characters.
+ * Based on selfies-py's len_selfies() function.
+ *
+ * Example:
+ *   lenSelfies('[C][C][O]')  // => 3 (not 9!)
+ *   lenSelfies('[Cl][Br]')   // => 2
+ *
+ * Reference: selfies-py/selfies/utils/selfies_utils.py::len_selfies()
+ */
+export function lenSelfies(selfies) {
+  // TODO: Implement symbol counting
+  // Algorithm:
+  // 1. Count occurrences of '[' character
+  // 2. This equals the number of symbols
+  // Note: Much faster than tokenizing the entire string
+  throw new Error('Not implemented')
+}

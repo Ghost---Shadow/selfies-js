@@ -19,11 +19,16 @@ selfies-js/
 ├── src/
 │   ├── index.js             ✓ API exports defined, TODO: verify after implementation
 │   ├── tokenizer.js         TODO: Implement tokenization logic
+│   ├── tokenizer.test.js    ✓ Unit tests outlined with TODOs
 │   ├── parser.js            TODO: Implement SELFIES parsing to IR
 │   ├── decoder.js           TODO: Implement SELFIES → SMILES conversion
+│   ├── decoder.test.js      ✓ Unit tests outlined with TODOs
 │   ├── encoder.js           TODO: POST-MVP (SMILES → SELFIES)
+│   ├── encoder.test.js      ✓ Unit tests outlined (skipped for post-MVP)
 │   ├── validator.js         TODO: Implement validation logic
+│   ├── validator.test.js    ✓ Unit tests outlined with TODOs
 │   ├── alphabet.js          TODO: Fill in token sets
+│   ├── alphabet.test.js     ✓ Unit tests outlined with TODOs
 │   ├── errors.js            ✓ Error classes defined, expand as needed
 │   │
 │   ├── dsl/
@@ -31,19 +36,18 @@ selfies-js/
 │   │   ├── parser.js        TODO: Implement DSL parsing
 │   │   ├── symbolTable.js   TODO: Implement symbol table operations
 │   │   ├── resolver.js      TODO: Implement reference resolution
-│   │   └── analyzer.js      TODO: Implement static analysis
+│   │   ├── analyzer.js      TODO: Implement static analysis
+│   │   └── dsl.test.js      ✓ Unit tests outlined with TODOs
 │   │
 │   └── properties/
 │       ├── atoms.js         TODO: Fill in atomic data tables
 │       ├── molecularWeight.js TODO: Implement MW calculation
-│       └── formula.js       TODO: Implement formula generation
+│       ├── formula.js       TODO: Implement formula generation
+│       └── properties.test.js ✓ Unit tests outlined with TODOs
 │
 ├── test/
-│   ├── decode.test.js       ✓ Test cases outlined with TODOs
-│   ├── encode.test.js       ✓ Test cases outlined (skipped for post-MVP)
-│   ├── tokenize.test.js     ✓ Test cases outlined with TODOs
-│   ├── dsl.test.js          ✓ Test cases outlined with TODOs
-│   ├── properties.test.js   ✓ Test cases outlined with TODOs
+│   ├── integration.test.js  ✓ Integration tests outlined with TODOs
+│   ├── known-issues.test.js ✓ Known bugs/edge cases placeholder
 │   │
 │   └── fixtures/
 │       ├── molecules.json   ✓ Test data for 9 molecules
@@ -125,6 +129,17 @@ See `../selfies-js-design.md` for full API specification and design details.
 4. Write tests as you implement each module
 5. Run `bun test` frequently to verify progress
 
+## Test Organization
+
+The test suite is organized as follows:
+
+- **Unit tests**: Located alongside source files (e.g., `tokenizer.test.js` next to `tokenizer.js`)
+- **Integration tests**: Located in `test/integration.test.js` - tests full workflows across modules
+- **Known issues**: Located in `test/known-issues.test.js` - edge cases and known bugs
+- **Fixtures**: Located in `test/fixtures/` - test data for molecules and DSL programs
+
+Run all tests with `bun test` - Bun will automatically discover all `*.test.js` files.
+
 ## Notes
 
 - All source files have comprehensive TODO comments explaining what needs to be implemented
@@ -132,6 +147,7 @@ See `../selfies-js-design.md` for full API specification and design details.
 - Follow the implementation order in IMPLEMENTATION.md to handle dependencies correctly
 - Encoder (SMILES → SELFIES) is explicitly marked as post-MVP
 - Performance targets are documented in IMPLEMENTATION.md
+- Unit tests live alongside their source files for easy navigation
 
 ## Git Repository
 

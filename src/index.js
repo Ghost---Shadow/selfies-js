@@ -10,14 +10,23 @@ export { encode } from './encoder.js'
 export { isValid } from './validator.js'
 
 // Tokenization
-export { tokenize, join } from './tokenizer.js'
+export { tokenize, join, lenSelfies } from './tokenizer.js'
 
 // Properties
 export { getMolecularWeight } from './properties/molecularWeight.js'
 export { getFormula } from './properties/formula.js'
 
 // Alphabet
-export { getAlphabet, getSemanticAlphabet } from './alphabet.js'
+export { getAlphabet, getSemanticAlphabet, getAlphabetFromSelfies } from './alphabet.js'
+
+// Constraints
+export {
+  getPresetConstraints,
+  getSemanticConstraints,
+  setSemanticConstraints,
+  getBondingCapacity,
+  resetConstraints
+} from './constraints.js'
 
 // DSL
 export { parse } from './dsl/parser.js'
