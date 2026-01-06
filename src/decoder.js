@@ -146,34 +146,7 @@ export function decodeToAST(selfies) {
         continue
       }
 
-      // Check if there's already a bond between these atoms
-      const existingBond = bonds.find(b =>
-        (b.from === targetIndex && b.to === prevAtomIndex) ||
-        (b.from === prevAtomIndex && b.to === targetIndex)
-      )
-
-      if (existingBond) {
-        // Ring on existing bond - increase bond order
-        existingBond.order = Math.min(existingBond.order + bondOrder, 3)
-      } else {
-        // Check if there's already a ring between these atoms
-        const existingRing = rings.find(r =>
-          (r.from === targetIndex && r.to === prevAtomIndex) ||
-          (r.from === prevAtomIndex && r.to === targetIndex)
-        )
-
-        if (existingRing) {
-          // Ring on existing ring - increase ring order
-          existingRing.order = Math.min(existingRing.order + bondOrder, 3)
-        } else {
-          // Add new ring closure
-          rings.push({
-            from: targetIndex,
-            to: prevAtomIndex,
-            order: bondOrder
-          })
-        }
-      }
+      handleRingClosure(targetIndex, prevAtomIndex, bondOrder, bonds, rings)
 
       state = nextState
       continue
@@ -229,11 +202,167 @@ export function dumpAST(selfies) {
 }
 
 /**
+ * Processes a branch token and returns updated state
+ * @returns {Object} { consumed, state } - tokens consumed and new state
+ */
+export function processBranchToken(token, tokens, i, state, prevAtomIndex, atoms, bonds, rings) {
+  const branchInfo = processBranchSymbol(token)
+  if (!branchInfo) {
+    return { consumed: 1, state }
+  }
+
+  if (state <= 1) {
+    // Skip branch at X0 or X1
+    return { consumed: 1, state }
+  }
+
+  const { order: branchOrder, L } = branchInfo
+  const [branchInitState, nextState] = nextBranchState(branchOrder, state)
+
+  // Read length specifier (Q) - read L tokens
+  i++
+  if (i >= tokens.length) {
+    // Branch at end with no length
+    return { consumed: 1, state: nextState }
+  }
+
+  const Q = readIndexFromTokens(tokens, i, L)
+  const afterQ = i + Q.consumed
+
+  // Derive branch
+  const branchResult = deriveBranch(
+    tokens,
+    afterQ,
+    Q.value + 1,
+    branchInitState,
+    prevAtomIndex,
+    atoms,
+    bonds,
+    rings
+  )
+
+  const totalConsumed = 1 + Q.consumed + branchResult.consumed
+  return { consumed: totalConsumed, state: nextState }
+}
+
+/**
+ * Processes a ring token and returns updated state
+ * @returns {Object} { consumed, state } - tokens consumed and new state
+ */
+export function processRingToken(token, tokens, i, state, prevAtomIndex, bonds, rings) {
+  const ringInfo = processRingSymbol(token)
+  if (!ringInfo) {
+    return { consumed: 1, state }
+  }
+
+  if (state === 0) {
+    // Skip ring at X0
+    return { consumed: 1, state }
+  }
+
+  const { order: requestedOrder, L } = ringInfo
+  const [bondOrder, nextState] = nextRingState(requestedOrder, state)
+
+  // Read length specifier (Q) - read L tokens
+  i++
+  if (i >= tokens.length) {
+    // Ring at end - apply as bond to prev atom
+    if (prevAtomIndex !== null && bonds.length > 0) {
+      // Increase bond order of last bond
+      const lastBond = bonds[bonds.length - 1]
+      lastBond.order = Math.min(lastBond.order + bondOrder, 3)
+    }
+    return { consumed: 1, state: nextState }
+  }
+
+  const Q = readIndexFromTokens(tokens, i, L)
+
+  // Calculate ring closure atom index
+  const targetIndex = Math.max(0, prevAtomIndex - (Q.value + 1))
+
+  // Skip ring to self
+  if (targetIndex === prevAtomIndex) {
+    return { consumed: 1 + Q.consumed, state: nextState }
+  }
+
+  handleRingClosure(targetIndex, prevAtomIndex, bondOrder, bonds, rings)
+
+  const totalConsumed = 1 + Q.consumed
+  return { consumed: totalConsumed, state: nextState }
+}
+
+/**
+ * Handles ring closure between two atoms
+ */
+export function handleRingClosure(targetIndex, prevAtomIndex, bondOrder, bonds, rings) {
+  // Check if there's already a bond between these atoms
+  const existingBond = bonds.find(b =>
+    (b.from === targetIndex && b.to === prevAtomIndex) ||
+    (b.from === prevAtomIndex && b.to === targetIndex)
+  )
+
+  if (existingBond) {
+    // Ring on existing bond - increase bond order
+    existingBond.order = Math.min(existingBond.order + bondOrder, 3)
+  } else {
+    // Check if there's already a ring between these atoms
+    const existingRing = rings.find(r =>
+      (r.from === targetIndex && r.to === prevAtomIndex) ||
+      (r.from === prevAtomIndex && r.to === targetIndex)
+    )
+
+    if (existingRing) {
+      // Ring on existing ring - increase ring order
+      existingRing.order = Math.min(existingRing.order + bondOrder, 3)
+    } else {
+      // Add new ring closure
+      rings.push({
+        from: targetIndex,
+        to: prevAtomIndex,
+        order: bondOrder
+      })
+    }
+  }
+}
+
+/**
+ * Processes an atom token and returns updated state
+ * @returns {Object} { consumed, state, prevAtomIndex } - tokens consumed, new state, and atom index
+ */
+export function processAtomToken(content, state, prevAtomIndex, atoms, bonds) {
+  const atomInfo = parseAtomSymbol(content)
+  if (!atomInfo) {
+    return { consumed: 1, state, prevAtomIndex }
+  }
+
+  const { element, bondOrder: requestedBond, stereo } = atomInfo
+  const capacity = getBondingCapacity(element)
+
+  // Determine actual bond order and next state
+  const [actualBond, nextState] = nextAtomState(requestedBond, capacity, state)
+
+  // Add atom
+  const atomIndex = atoms.length
+  atoms.push({ element, capacity, stereo })
+
+  // Add bond (if not first atom and has bonding)
+  if (actualBond > 0 && prevAtomIndex !== null) {
+    bonds.push({
+      from: prevAtomIndex,
+      to: atomIndex,
+      order: actualBond
+    })
+  }
+
+  return { consumed: 1, state: nextState, prevAtomIndex: atomIndex }
+}
+
+/**
  * Reads an index value from SELFIES tokens
  * Returns {value, consumed} where consumed is number of tokens used
  * @param {number} numTokens - Number of tokens to read (from Branch/Ring L value)
  */
-function readIndexFromTokens(tokens, startIndex, numTokens = 1) {
+export function readIndexFromTokens(tokens, startIndex, numTokens = 1) {
   if (startIndex >= tokens.length) {
     return { value: 0, consumed: 0 }
   }
@@ -266,7 +395,7 @@ function readIndexFromTokens(tokens, startIndex, numTokens = 1) {
 /**
  * Derives a branch subtree
  */
-function deriveBranch(tokens, startIndex, maxDerive, initState, rootAtom, atoms, bonds, rings) {
+export function deriveBranch(tokens, startIndex, maxDerive, initState, rootAtom, atoms, bonds, rings) {
   let state = initState
   let prevAtomIndex = rootAtom
   let consumed = 0
@@ -321,7 +450,7 @@ function deriveBranch(tokens, startIndex, maxDerive, initState, rootAtom, atoms,
 /**
  * Parses an atom symbol and extracts element, bond order, and stereo
  */
-function parseAtomSymbol(content) {
+export function parseAtomSymbol(content) {
   let bondOrder = 1
   let element = content
   let stereo = null
@@ -356,17 +485,12 @@ function parseAtomSymbol(content) {
 }
 
 /**
- * Builds SMILES string from atom/bond/ring structure
+ * Assigns ring numbers to ring closures
  */
-function buildSmiles(atoms, bonds, rings) {
-  if (atoms.length === 0) return ''
-
-  const smiles = []
-  const visited = new Set()
+export function assignRingNumbers(rings) {
   const ringNumbers = new Map()
   let nextRingNum = 1
 
-  // Process rings first to assign ring numbers
   for (const ring of rings) {
     if (!ringNumbers.has(`${ring.from}-${ring.to}`)) {
       ringNumbers.set(`${ring.from}-${ring.to}`, nextRingNum)
@@ -375,7 +499,13 @@ function buildSmiles(atoms, bonds, rings) {
     }
   }
 
-  // Build adjacency list
+  return ringNumbers
+}
+
+/**
+ * Builds adjacency list from bonds
+ */
+export function buildAdjacencyList(atoms, bonds) {
   const adj = new Map()
   for (let i = 0; i < atoms.length; i++) {
     adj.set(i, [])
@@ -384,6 +514,67 @@ function buildSmiles(atoms, bonds, rings) {
     adj.get(bond.from).push({ to: bond.to, order: bond.order })
     adj.get(bond.to).push({ to: bond.from, order: bond.order })
   }
+  return adj
+}
+
+/**
+ * Writes bond symbol to SMILES array
+ */
+export function writeBondSymbol(bondOrder, smiles) {
+  if (bondOrder === 2) smiles.push('=')
+  if (bondOrder === 3) smiles.push('#')
+}
+
+/**
+ * Writes ring closures for an atom
+ */
+export function writeRingClosures(atomIndex, rings, ringNumbers, visited, smiles) {
+  for (const ring of rings) {
+    const isFrom = ring.from === atomIndex
+    const isTo = ring.to === atomIndex
+
+    if (isFrom && visited.has(ring.to)) {
+      // Closing ring: we've visited the other end
+      const ringNum = ringNumbers.get(`${atomIndex}-${ring.to}`)
+      writeBondSymbol(ring.order, smiles)
+      smiles.push(ringNum.toString())
+    } else if (isTo && visited.has(ring.from)) {
+      // Closing ring (other direction)
+      const ringNum = ringNumbers.get(`${ring.from}-${atomIndex}`)
+      writeBondSymbol(ring.order, smiles)
+      smiles.push(ringNum.toString())
+    } else if ((isFrom && !visited.has(ring.to)) || (isTo && !visited.has(ring.from))) {
+      // Opening ring: we haven't visited the other end yet
+      const ringNum = isFrom ?
+        ringNumbers.get(`${atomIndex}-${ring.to}`) :
+        ringNumbers.get(`${ring.from}-${atomIndex}`)
+      writeBondSymbol(ring.order, smiles)
+      smiles.push(ringNum.toString())
+    }
+  }
+}
+
+/**
+ * Writes atom symbol to SMILES array
+ */
+export function writeAtomSymbol(atom, smiles) {
+  if (atom.stereo) {
+    smiles.push(`[${atom.stereo}]`)
+  } else {
+    smiles.push(atom.element)
+  }
+}
+
+/**
+ * Builds SMILES string from atom/bond/ring structure
+ */
+function buildSmiles(atoms, bonds, rings) {
+  if (atoms.length === 0) return ''
+
+  const smiles = []
+  const visited = new Set()
+  const ringNumbers = assignRingNumbers(rings)
+  const adj = buildAdjacencyList(atoms, bonds)
 
   // DFS to build SMILES
   function dfs(atomIndex, parentIndex = null) {
@@ -393,39 +584,10 @@ function buildSmiles(atoms, bonds, rings) {
     const atom = atoms[atomIndex]
 
     // Write atom (with stereo if present)
-    if (atom.stereo) {
-      smiles.push(`[${atom.stereo}]`)
-    } else {
-      smiles.push(atom.element)
-    }
+    writeAtomSymbol(atom, smiles)
 
     // Write ring closures for this atom
-    for (const ring of rings) {
-      const isFrom = ring.from === atomIndex
-      const isTo = ring.to === atomIndex
-
-      if (isFrom && visited.has(ring.to)) {
-        // Closing ring: we've visited the other end
-        const ringNum = ringNumbers.get(`${atomIndex}-${ring.to}`)
-        if (ring.order === 2) smiles.push('=')
-        if (ring.order === 3) smiles.push('#')
-        smiles.push(ringNum.toString())
-      } else if (isTo && visited.has(ring.from)) {
-        // Closing ring (other direction)
-        const ringNum = ringNumbers.get(`${ring.from}-${atomIndex}`)
-        if (ring.order === 2) smiles.push('=')
-        if (ring.order === 3) smiles.push('#')
-        smiles.push(ringNum.toString())
-      } else if ((isFrom && !visited.has(ring.to)) || (isTo && !visited.has(ring.from))) {
-        // Opening ring: we haven't visited the other end yet
-        const ringNum = isFrom ?
-          ringNumbers.get(`${atomIndex}-${ring.to}`) :
-          ringNumbers.get(`${ring.from}-${atomIndex}`)
-        if (ring.order === 2) smiles.push('=')
-        if (ring.order === 3) smiles.push('#')
-        smiles.push(ringNum.toString())
-      }
-    }
+    writeRingClosures(atomIndex, rings, ringNumbers, visited, smiles)
 
     // Visit neighbors
     const neighbors = adj.get(atomIndex) || []
@@ -441,8 +603,7 @@ function buildSmiles(atoms, bonds, rings) {
       }
 
       // Bond order
-      if (neighbor.order === 2) smiles.push('=')
-      if (neighbor.order === 3) smiles.push('#')
+      writeBondSymbol(neighbor.order, smiles)
 
       dfs(neighbor.to, atomIndex)
 
