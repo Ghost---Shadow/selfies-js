@@ -24,6 +24,17 @@ import {
  * @throws {Error} If the SELFIES string is invalid
  */
 export function decode(selfies) {
+  const ast = decodeToAST(selfies)
+  return buildSmiles(ast.atoms, ast.bonds, ast.rings)
+}
+
+/**
+ * Decodes a SELFIES string to an Abstract Syntax Tree (AST)
+ * @param {string} selfies - The SELFIES string to decode
+ * @returns {Object} AST with atoms, bonds, and rings arrays
+ * @throws {Error} If the SELFIES string is invalid
+ */
+export function decodeToAST(selfies) {
   const tokens = tokenize(selfies)
   const atoms = []
   const bonds = []
@@ -166,7 +177,7 @@ export function decode(selfies) {
     // Regular atom symbols
     const atomInfo = parseAtomSymbol(content)
     if (atomInfo) {
-      const { element, bondOrder: requestedBond } = atomInfo
+      const { element, bondOrder: requestedBond, stereo } = atomInfo
       const capacity = getBondingCapacity(element)
 
       // Determine actual bond order and next state
@@ -174,7 +185,7 @@ export function decode(selfies) {
 
       // Add atom
       const atomIndex = atoms.length
-      atoms.push({ element, capacity })
+      atoms.push({ element, capacity, stereo })
 
       // Add bond (if not first atom and has bonding)
       if (actualBond > 0 && prevAtomIndex !== null) {
@@ -198,8 +209,18 @@ export function decode(selfies) {
     i++
   }
 
-  // Build SMILES from structure
-  return buildSmiles(atoms, bonds, rings)
+  // Return AST
+  return { atoms, bonds, rings }
+}
+
+/**
+ * Dumps the AST as formatted JSON string
+ * @param {string} selfies - The SELFIES string to decode
+ * @returns {string} Formatted JSON representation of the AST
+ */
+export function dumpAST(selfies) {
+  const ast = decodeToAST(selfies)
+  return JSON.stringify(ast, null, 2)
 }
 
 /**
@@ -265,13 +286,13 @@ function deriveBranch(tokens, startIndex, maxDerive, initState, rootAtom, atoms,
       continue
     }
 
-    const { element, bondOrder: requestedBond } = atomInfo
+    const { element, bondOrder: requestedBond, stereo } = atomInfo
     const capacity = getBondingCapacity(element)
     const [actualBond, nextState] = nextAtomState(requestedBond, capacity, state)
 
     // Add atom
     const atomIndex = atoms.length
-    atoms.push({ element, capacity })
+    atoms.push({ element, capacity, stereo })
 
     // Add bond
     if (actualBond > 0 && prevAtomIndex !== null) {
@@ -293,11 +314,12 @@ function deriveBranch(tokens, startIndex, maxDerive, initState, rootAtom, atoms,
 }
 
 /**
- * Parses an atom symbol and extracts element and bond order
+ * Parses an atom symbol and extracts element, bond order, and stereo
  */
 function parseAtomSymbol(content) {
   let bondOrder = 1
   let element = content
+  let stereo = null
 
   if (content.startsWith('=')) {
     bondOrder = 2
@@ -309,13 +331,23 @@ function parseAtomSymbol(content) {
     element = content.slice(1)
   }
 
+  // Check for stereo notation: C@, C@@, C@H, etc.
+  if (element.includes('@')) {
+    stereo = element
+    // Extract base element (everything before @)
+    const match = element.match(/^([A-Z][a-z]?)/)
+    if (match) {
+      element = match[1]
+    }
+  }
+
   // Check if it's a valid element
   const validElements = ['C', 'N', 'O', 'S', 'P', 'F', 'Cl', 'Br', 'I', 'B', 'H']
   if (!validElements.includes(element)) {
     return null
   }
 
-  return { element, bondOrder }
+  return { element, bondOrder, stereo }
 }
 
 /**
@@ -355,8 +387,12 @@ function buildSmiles(atoms, bonds, rings) {
     visited.add(atomIndex)
     const atom = atoms[atomIndex]
 
-    // Write atom
-    smiles.push(atom.element)
+    // Write atom (with stereo if present)
+    if (atom.stereo) {
+      smiles.push(`[${atom.stereo}]`)
+    } else {
+      smiles.push(atom.element)
+    }
 
     // Write ring closures for this atom
     for (const ring of rings) {

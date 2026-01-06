@@ -5,7 +5,7 @@
  */
 
 // Core functionality
-export { decode } from './decoder.js'
+export { decode, decodeToAST, dumpAST } from './decoder.js'
 export { encode } from './encoder.js'
 export { isValid } from './validator.js'
 
