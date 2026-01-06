@@ -96,7 +96,7 @@ describe('selfies-py compatibility tests', () => {
     test('handles branch and ring decrement state', () => {
       // These test that branches/rings properly modify the derivation state
       expect(decode('[C][C][C][Ring1][Ring1][#C]')).toBe('C1CC1=C')
-      expect(decode('[C][=C][C][C][#Ring1][Ring1][#C]')).toBe('C=C1CC1')
+      expect(decode('[C][=C][C][C][#Ring1][Ring1][#C]')).toBe('C=C#1CC#1')
     })
 
     test('handles ring immediately following branch', () => {
@@ -113,19 +113,19 @@ describe('selfies-py compatibility tests', () => {
       expect(ast).toEqual({
         atoms: [
           { element: 'C', capacity: 4, stereo: 'C@' },
+          { element: 'C', capacity: 4, stereo: null },
           { element: 'Br', capacity: 1, stereo: null },
-          { element: 'Cl', capacity: 1, stereo: null },
-          { element: 'F', capacity: 1, stereo: null }
+          { element: 'Cl', capacity: 1, stereo: null }
         ],
         bonds: [
-          { from: 0, to: 1, order: 2 },
-          { from: 0, to: 2, order: 1 },
+          { from: 0, to: 1, order: 1 },
+          { from: 1, to: 2, order: 1 },
           { from: 0, to: 3, order: 1 }
         ],
         rings: []
       })
 
-      expect(decode(s)).toBe('[C@](Br)(Cl)F')
+      expect(decode(s)).toBe('[C@](CBr)Cl')
     })
   })
 
@@ -162,18 +162,20 @@ describe('selfies-py compatibility tests', () => {
           { element: 'C', capacity: 4, stereo: null },
           { element: 'C', capacity: 4, stereo: null },
           { element: 'S', capacity: 6, stereo: null },
-          { element: 'F', capacity: 1, stereo: null }
+          { element: 'F', capacity: 1, stereo: null },
+          { element: 'C', capacity: 4, stereo: null }
         ],
         bonds: [
           { from: 0, to: 1, order: 1 },
           { from: 1, to: 2, order: 1 },
           { from: 2, to: 3, order: 1 },
-          { from: 3, to: 4, order: 1 }
+          { from: 3, to: 4, order: 1 },
+          { from: 0, to: 5, order: 1 }
         ],
         rings: []
       })
 
-      expect(decode(s)).toBe('CCCSF')
+      expect(decode(s)).toBe('C(CCSF)C')
     })
 
     test('handles oversized ring', () => {

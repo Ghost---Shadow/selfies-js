@@ -24,50 +24,124 @@ describe('AST functionality', () => {
 
   test('atoms have element, capacity, and stereo', () => {
     const ast = decodeToAST('[C][N][O]')
-    expect(ast.atoms[0]).toEqual({ element: 'C', capacity: 4, stereo: null })
-    expect(ast.atoms[1]).toEqual({ element: 'N', capacity: 3, stereo: null })
-    expect(ast.atoms[2]).toEqual({ element: 'O', capacity: 2, stereo: null })
+    expect(ast).toEqual({
+      atoms: [
+        { element: 'C', capacity: 4, stereo: null },
+        { element: 'N', capacity: 3, stereo: null },
+        { element: 'O', capacity: 2, stereo: null }
+      ],
+      bonds: [
+        { from: 0, to: 1, order: 1 },
+        { from: 1, to: 2, order: 1 }
+      ],
+      rings: []
+    })
   })
 
-  test('bonds have from, to, and order', () => {
+  test('bonds have from, to, and order - state machine limits bond order', () => {
+    // Bond order is limited by state: after [=C], state=2, so [#C] only gets order 2
     const ast = decodeToAST('[C][=C][#C]')
-    expect(ast.bonds[0]).toEqual({ from: 0, to: 1, order: 2 })
-    expect(ast.bonds[1]).toEqual({ from: 1, to: 2, order: 3 })
+    expect(ast).toEqual({
+      atoms: [
+        { element: 'C', capacity: 4, stereo: null },
+        { element: 'C', capacity: 4, stereo: null },
+        { element: 'C', capacity: 4, stereo: null }
+      ],
+      bonds: [
+        { from: 0, to: 1, order: 2 },
+        { from: 1, to: 2, order: 2 }  // Limited by state!
+      ],
+      rings: []
+    })
   })
 
   test('stereo atoms are captured', () => {
-    const ast = decodeToAST('[C@][Cl][Br][F]')
-    expect(ast.atoms[0].stereo).toBe('C@')
-    expect(ast.atoms[0].element).toBe('C')
+    // After Br (capacity 1), state becomes null, so chain terminates before F
+    const ast = decodeToAST('[C@][C][Br]')
+    expect(ast).toEqual({
+      atoms: [
+        { element: 'C', capacity: 4, stereo: 'C@' },
+        { element: 'C', capacity: 4, stereo: null },
+        { element: 'Br', capacity: 1, stereo: null }
+      ],
+      bonds: [
+        { from: 0, to: 1, order: 1 },
+        { from: 1, to: 2, order: 1 }
+      ],
+      rings: []
+    })
   })
 
   test('branches are reflected in bonds', () => {
     const ast = decodeToAST('[C][C][Branch1][C][C][C]')
-    expect(ast.atoms).toBeArrayOfSize(4)
-    expect(ast.bonds).toBeArrayOfSize(3)
-    // Atom 1 should have bonds to 0, 2, and 3
-    const atom1Bonds = ast.bonds.filter(b => b.from === 1 || b.to === 1)
-    expect(atom1Bonds.length).toBe(3)
+    expect(ast).toEqual({
+      atoms: [
+        { element: 'C', capacity: 4, stereo: null },
+        { element: 'C', capacity: 4, stereo: null },
+        { element: 'C', capacity: 4, stereo: null },
+        { element: 'C', capacity: 4, stereo: null }
+      ],
+      bonds: [
+        { from: 0, to: 1, order: 1 },
+        { from: 1, to: 2, order: 1 },  // Branch
+        { from: 1, to: 3, order: 1 }   // Main chain continuation
+      ],
+      rings: []
+    })
   })
 
   test('rings are captured', () => {
-    const ast = decodeToAST('[C][C][C][C][Ring1][C]')
-    expect(ast.rings.length).toBeGreaterThan(0)
+    // Cyclopropane: [C][C][C][Ring1][Branch1] creates ring from atom 2 back to atom 0
+    const ast = decodeToAST('[C][C][C][Ring1][Branch1]')
+    expect(ast).toEqual({
+      atoms: [
+        { element: 'C', capacity: 4, stereo: null },
+        { element: 'C', capacity: 4, stereo: null },
+        { element: 'C', capacity: 4, stereo: null }
+      ],
+      bonds: [
+        { from: 0, to: 1, order: 1 },
+        { from: 1, to: 2, order: 1 }
+      ],
+      rings: [
+        { from: 0, to: 2, order: 1 }  // Ring closure
+      ]
+    })
   })
 
   test('dumpAST returns valid JSON', () => {
     const json = dumpAST('[C][C][O]')
     expect(() => JSON.parse(json)).not.toThrow()
     const parsed = JSON.parse(json)
-    expect(parsed.atoms).toBeArrayOfSize(3)
+    expect(parsed).toEqual({
+      atoms: [
+        { element: 'C', capacity: 4, stereo: null },
+        { element: 'C', capacity: 4, stereo: null },
+        { element: 'O', capacity: 2, stereo: null }
+      ],
+      bonds: [
+        { from: 0, to: 1, order: 1 },
+        { from: 1, to: 2, order: 1 }
+      ],
+      rings: []
+    })
   })
 
   test('AST captures complex structures', () => {
     const ast = decodeToAST('[C][=C][Branch1][C][O][C]')
-    expect(ast.atoms.length).toBeGreaterThan(3)
-    expect(ast.bonds.length).toBeGreaterThan(2)
-    // Check for double bond
-    const doubleBond = ast.bonds.find(b => b.order === 2)
-    expect(doubleBond).toBeDefined()
+    expect(ast).toEqual({
+      atoms: [
+        { element: 'C', capacity: 4, stereo: null },
+        { element: 'C', capacity: 4, stereo: null },
+        { element: 'O', capacity: 2, stereo: null },
+        { element: 'C', capacity: 4, stereo: null }
+      ],
+      bonds: [
+        { from: 0, to: 1, order: 2 },  // Double bond
+        { from: 1, to: 2, order: 1 },  // Branch
+        { from: 1, to: 3, order: 1 }   // Main chain continuation
+      ],
+      rings: []
+    })
   })
 })

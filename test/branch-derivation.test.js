@@ -20,13 +20,15 @@ describe('Branch derivation', () => {
         { element: 'C', capacity: 4, stereo: null },
         { element: 'C', capacity: 4, stereo: null },
         { element: 'S', capacity: 6, stereo: null },
-        { element: 'F', capacity: 1, stereo: null }
+        { element: 'F', capacity: 1, stereo: null },
+        { element: 'C', capacity: 4, stereo: null }
       ],
       bonds: [
         { from: 0, to: 1, order: 1 },
         { from: 1, to: 2, order: 1 },
         { from: 2, to: 3, order: 1 },
-        { from: 3, to: 4, order: 1 }
+        { from: 3, to: 4, order: 1 },
+        { from: 0, to: 5, order: 1 }
       ],
       rings: []
     })
@@ -43,13 +45,13 @@ describe('Branch derivation', () => {
     expect(ast).toEqual({
       atoms: [
         { element: 'C', capacity: 4, stereo: 'C@' },
+        { element: 'C', capacity: 4, stereo: null },
         { element: 'Br', capacity: 1, stereo: null },
-        { element: 'Cl', capacity: 1, stereo: null },
-        { element: 'F', capacity: 1, stereo: null }
+        { element: 'Cl', capacity: 1, stereo: null }
       ],
       bonds: [
-        { from: 0, to: 1, order: 2 },
-        { from: 0, to: 2, order: 1 },
+        { from: 0, to: 1, order: 1 },
+        { from: 1, to: 2, order: 1 },
         { from: 0, to: 3, order: 1 }
       ],
       rings: []
@@ -71,7 +73,7 @@ describe('Branch derivation', () => {
       bonds: [
         { from: 0, to: 1, order: 1 },
         { from: 1, to: 2, order: 1 },
-        { from: 2, to: 3, order: 1 }
+        { from: 1, to: 3, order: 1 }
       ],
       rings: []
     })

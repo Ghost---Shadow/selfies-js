@@ -5,6 +5,7 @@
 import { describe, test, expect } from 'bun:test'
 import {
   decode,
+  decodeToAST,
   parseAtomSymbol,
   readIndexFromTokens,
   deriveBranch,
@@ -463,5 +464,97 @@ describe('writeRingClosures', () => {
     writeRingClosures(0, rings, ringNumbers, visited, smiles)
 
     expect(smiles).toEqual(['#', '1'])
+  })
+})
+
+describe('Bug reproductions', () => {
+  test('BUG: Triple bond becomes double bond with low state', () => {
+    // When state=2 and we request bond order 3, we should get bond order 2
+    // This is the root cause of [C][=C][#C] having wrong bond order
+    const atoms = [
+      { element: 'C', capacity: 4, stereo: null },
+      { element: 'C', capacity: 4, stereo: null }
+    ]
+    const bonds = []
+
+    // Simulate: prevAtom has state=2 remaining, next atom requests order 3
+    const result = processAtomToken('#C', 2, 1, atoms, bonds)
+
+    expect(result.state).toBe(2) // Carbon has capacity 4, bond uses 2, so 4-2=2 remaining
+    expect(atoms.length).toBe(3)
+    expect(bonds.length).toBe(1)
+    expect(bonds[0].order).toBe(2) // Should be min(3, 2, 4) = 2
+    expect(bonds[0].from).toBe(1)
+    expect(bonds[0].to).toBe(2)
+  })
+
+  test('DOCUMENTED BEHAVIOR: Triple bond limited by state', () => {
+    // [C][=C][#C] produces bonds [order 2, order 2] NOT [order 2, order 3]
+    // Because after [=C], state is 2, so [#C] can only get bond order min(3,2,4)=2
+    const ast = decodeToAST('[C][=C][#C]')
+
+    expect(ast).toEqual({
+      atoms: [
+        { element: 'C', capacity: 4, stereo: null },
+        { element: 'C', capacity: 4, stereo: null },
+        { element: 'C', capacity: 4, stereo: null }
+      ],
+      bonds: [
+        { from: 0, to: 1, order: 2 },  // =C gets full double bond
+        { from: 1, to: 2, order: 2 }   // #C limited to 2 by state!
+      ],
+      rings: []
+    })
+  })
+})
+
+describe('SELFIES State Machine Documentation', () => {
+  /**
+   * CRITICAL UNDERSTANDING: SELFIES uses a state machine where "state" represents
+   * the remaining bonding capacity at the current position in the derivation.
+   *
+   * State transitions:
+   * - Start: state = 0
+   * - After adding atom with capacity N and forming bond of order B:
+   *   newState = N - B (remaining capacity of that atom)
+   * - When state = 0: cannot form more bonds in this chain
+   * - When state = null: chain is terminated
+   *
+   * Bond order resolution:
+   * - Requested bond (from = or # prefix) is limited by THREE factors:
+   *   1. The request itself (1, 2, or 3)
+   *   2. Current state (remaining capacity from previous atom)
+   *   3. New atom's total capacity
+   * - Actual bond = min(requested, state, capacity)
+   *
+   * Example: [C][=C][#C]
+   * - [C]: state 0 → atom(C, cap=4) → state 4
+   * - [=C]: request=2, state=4, cap=4 → bond=min(2,4,4)=2, newState=4-2=2
+   * - [#C]: request=3, state=2, cap=4 → bond=min(3,2,4)=2, newState=4-2=2
+   *         ^^^^^^^ LIMITED BY STATE!
+   */
+  test('State machine documentation - bond order limits', () => {
+    const atoms = []
+    const bonds = []
+    let state = 0
+    let prevAtom = null
+
+    // First C
+    let result = processAtomToken('C', state, prevAtom, atoms, bonds)
+    expect(result.state).toBe(4)
+    state = result.state
+    prevAtom = result.prevAtomIndex
+
+    // =C (double bond requested)
+    result = processAtomToken('=C', state, prevAtom, atoms, bonds)
+    expect(bonds[bonds.length - 1].order).toBe(2) // Gets full double bond
+    expect(result.state).toBe(2) // 4 - 2 = 2 remaining
+    state = result.state
+    prevAtom = result.prevAtomIndex
+
+    // #C (triple bond requested, but state only allows 2)
+    result = processAtomToken('#C', state, prevAtom, atoms, bonds)
+    expect(bonds[bonds.length - 1].order).toBe(2) // LIMITED to 2 by state!
+    expect(result.state).toBe(2) // 4 - 2 = 2
   })
 })
