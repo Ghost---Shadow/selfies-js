@@ -75,12 +75,16 @@ describe('DSL workflow', () => {
 })
 
 describe('Round-trip workflows', () => {
-  // TODO: Test encode → decode round-trip (POST-MVP)
-  test.skip('round-trips through encode and decode', () => {
-    // TODO: const original = 'CCO'
-    // TODO: const selfies = encode(original)
-    // TODO: const decoded = decode(selfies)
-    // TODO: expect(decoded).toBe(original)
+  test('round-trips through encode and decode', () => {
+    const original = 'CCO'
+    const selfies = encode(original)
+    const decoded = decode(selfies)
+    expect(decoded).toBe(original)
+
+    expect(decode(encode('C=C'))).toBe('C=C')
+    expect(decode(encode('C#C'))).toBe('C#C')
+    expect(decode(encode('CC(C)C'))).toBe('CC(C)C')
+    expect(decode(encode('C1CC1'))).toBe('C1CC1')
   })
 })
 
