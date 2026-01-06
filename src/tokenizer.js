@@ -14,16 +14,50 @@
  *   // => ['[C]', '[=C]', '[Branch1]', '[C]', '[O]']
  */
 export function tokenize(selfies) {
-  // TODO: Implement tokenization
-  // Algorithm:
-  // 1. Scan through string character by character
-  // 2. When '[' is found, start accumulating token
-  // 3. When ']' is found, complete the token
-  // 4. Handle edge cases:
-  //    - Unclosed brackets
-  //    - Empty tokens []
-  //    - Malformed input
-  throw new Error('Not implemented')
+  if (selfies === '') {
+    return []
+  }
+
+  const tokens = []
+  let current = ''
+  let inToken = false
+
+  for (let i = 0; i < selfies.length; i++) {
+    const char = selfies[i]
+
+    if (char === '[') {
+      if (inToken) {
+        throw new Error(`Unclosed bracket at position ${i}`)
+      }
+      inToken = true
+      current = '['
+    } else if (char === ']') {
+      if (!inToken) {
+        throw new Error(`Unexpected closing bracket at position ${i}`)
+      }
+      current += ']'
+
+      // Check for empty token
+      if (current === '[]') {
+        throw new Error(`Empty token at position ${i - 1}`)
+      }
+
+      tokens.push(current)
+      current = ''
+      inToken = false
+    } else if (inToken) {
+      current += char
+    } else {
+      throw new Error(`Character '${char}' outside of token at position ${i}`)
+    }
+  }
+
+  // Check for unclosed bracket at end
+  if (inToken) {
+    throw new Error(`Unclosed bracket at end of string`)
+  }
+
+  return tokens
 }
 
 /**
@@ -35,9 +69,7 @@ export function tokenize(selfies) {
  *   join(['[C]', '[C]', '[O]']) // => '[C][C][O]'
  */
 export function join(tokens) {
-  // TODO: Implement token joining
-  // Simple concatenation of tokens
-  throw new Error('Not implemented')
+  return tokens.join('')
 }
 
 /**
@@ -55,10 +87,13 @@ export function join(tokens) {
  * Reference: selfies-py/selfies/utils/selfies_utils.py::len_selfies()
  */
 export function lenSelfies(selfies) {
-  // TODO: Implement symbol counting
-  // Algorithm:
-  // 1. Count occurrences of '[' character
-  // 2. This equals the number of symbols
-  // Note: Much faster than tokenizing the entire string
-  throw new Error('Not implemented')
+  // Count occurrences of '[' character
+  // This equals the number of symbols and is faster than tokenizing
+  let count = 0
+  for (let i = 0; i < selfies.length; i++) {
+    if (selfies[i] === '[') {
+      count++
+    }
+  }
+  return count
 }

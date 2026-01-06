@@ -3,29 +3,27 @@
  */
 
 import { describe, test, expect } from 'bun:test'
-import { decode } from '../src/decoder.js'
+import { decode } from './decoder.js'
 
 describe('decode', () => {
-  // TODO: Basic molecules
   test('decodes methane', () => {
-    // TODO: expect(decode('[C]')).toBe('C')
+    expect(decode('[C]')).toBe('C')
   })
 
   test('decodes ethane', () => {
-    // TODO: expect(decode('[C][C]')).toBe('CC')
+    expect(decode('[C][C]')).toBe('CC')
   })
 
   test('decodes ethanol', () => {
-    // TODO: expect(decode('[C][C][O]')).toBe('CCO')
+    expect(decode('[C][C][O]')).toBe('CCO')
   })
 
-  // TODO: Bond orders
   test('decodes ethene (double bond)', () => {
-    // TODO: expect(decode('[C][=C]')).toBe('C=C')
+    expect(decode('[C][=C]')).toBe('C=C')
   })
 
   test('decodes acetylene (triple bond)', () => {
-    // TODO: expect(decode('[C][#C]')).toBe('C#C')
+    expect(decode('[C][#C]')).toBe('C#C')
   })
 
   // TODO: Branches

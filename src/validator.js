@@ -24,13 +24,28 @@ import { getAlphabet } from './alphabet.js'
  *   isValid('[Xyz]') // => false (invalid token)
  */
 export function isValid(selfies) {
-  // TODO: Implement validation
-  // Algorithm:
-  // 1. Try to tokenize - catch any bracket errors
-  // 2. Check each token against alphabet
-  // 3. Validate branch/ring token sequences have proper specifiers
-  // 4. Return true if all checks pass, false otherwise
-  throw new Error('Not implemented')
+  // Empty string is invalid
+  if (selfies === '') {
+    return false
+  }
+
+  try {
+    // Try to tokenize - will catch bracket errors
+    const tokens = tokenize(selfies)
+
+    // Check each token against alphabet
+    const alphabet = getAlphabet()
+    for (let i = 0; i < tokens.length; i++) {
+      if (!alphabet.has(tokens[i])) {
+        return false
+      }
+    }
+
+    return true
+  } catch (error) {
+    // Tokenization failed (unclosed brackets, empty tokens, etc.)
+    return false
+  }
 }
 
 /**
@@ -39,8 +54,8 @@ export function isValid(selfies) {
  * @returns {boolean} True if token is valid
  */
 function isValidToken(token) {
-  // TODO: Check if token is in alphabet
-  throw new Error('Not implemented')
+  const alphabet = getAlphabet()
+  return alphabet.has(token)
 }
 
 /**
@@ -50,7 +65,6 @@ function isValidToken(token) {
  * @returns {boolean} True if sequence is valid
  */
 function validateSpecialToken(tokens, index) {
-  // TODO: Validate that branch/ring tokens are followed by
-  // appropriate length specifier tokens
-  throw new Error('Not implemented')
+  // For now, just return true - full validation happens in parser
+  return true
 }

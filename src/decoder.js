@@ -19,18 +19,26 @@ import { parse } from './parser.js'
  *   decode('[C][=C][C][=C][C][=C][Ring1][=Branch1]') // => 'C1=CC=CC=C1'
  */
 export function decode(selfies) {
-  // TODO: Implement SELFIES decoding
-  // Algorithm:
-  // 1. Tokenize the SELFIES string
-  // 2. Parse tokens into molecule IR
-  // 3. Convert IR to SMILES:
-  //    - Traverse atoms in order
-  //    - Write SMILES symbols
-  //    - Handle branches with parentheses
-  //    - Handle rings with numbers
-  //    - Add implicit hydrogens notation if needed
-  // 4. Return SMILES string
-  throw new Error('Not implemented')
+  const tokens = tokenize(selfies)
+  let smiles = ''
+
+  for (let i = 0; i < tokens.length; i++) {
+    const token = tokens[i]
+
+    // Remove brackets and check for bond prefix
+    const content = token.slice(1, -1)
+
+    // Check for bond modifiers
+    if (content.startsWith('=')) {
+      smiles += '=' + content.slice(1)
+    } else if (content.startsWith('#')) {
+      smiles += '#' + content.slice(1)
+    } else {
+      smiles += content
+    }
+  }
+
+  return smiles
 }
 
 /**

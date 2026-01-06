@@ -10,14 +10,17 @@
  * Maps element symbol to properties
  */
 export const ATOMIC_DATA = {
-  // TODO: Fill in atomic data for all supported elements
-  // Format:
-  // 'C': { mass: 12.011, valence: 4, name: 'Carbon' },
-  // 'N': { mass: 14.007, valence: 3, name: 'Nitrogen' },
-  // etc.
-  //
-  // Supported elements (from design doc):
-  // C, N, O, S, P, F, Cl, Br, I, B
+  'C': { mass: 12.011, valence: 4, name: 'Carbon' },
+  'N': { mass: 14.007, valence: 3, name: 'Nitrogen' },
+  'O': { mass: 15.999, valence: 2, name: 'Oxygen' },
+  'S': { mass: 32.06, valence: 2, name: 'Sulfur' },
+  'P': { mass: 30.974, valence: 3, name: 'Phosphorus' },
+  'F': { mass: 18.998, valence: 1, name: 'Fluorine' },
+  'Cl': { mass: 35.45, valence: 1, name: 'Chlorine' },
+  'Br': { mass: 79.904, valence: 1, name: 'Bromine' },
+  'I': { mass: 126.904, valence: 1, name: 'Iodine' },
+  'B': { mass: 10.81, valence: 3, name: 'Boron' },
+  'H': { mass: 1.008, valence: 1, name: 'Hydrogen' }
 }
 
 /**
@@ -27,8 +30,11 @@ export const ATOMIC_DATA = {
  * @throws {Error} If element is not supported
  */
 export function getAtomicMass(element) {
-  // TODO: Look up and return atomic mass
-  throw new Error('Not implemented')
+  const data = ATOMIC_DATA[element]
+  if (!data) {
+    throw new Error(`Unsupported element: ${element}`)
+  }
+  return data.mass
 }
 
 /**
@@ -38,8 +44,11 @@ export function getAtomicMass(element) {
  * @throws {Error} If element is not supported
  */
 export function getValence(element) {
-  // TODO: Look up and return valence
-  throw new Error('Not implemented')
+  const data = ATOMIC_DATA[element]
+  if (!data) {
+    throw new Error(`Unsupported element: ${element}`)
+  }
+  return data.valence
 }
 
 /**
@@ -48,8 +57,7 @@ export function getValence(element) {
  * @returns {boolean} True if element is supported
  */
 export function isSupported(element) {
-  // TODO: Check if element exists in ATOMIC_DATA
-  throw new Error('Not implemented')
+  return element in ATOMIC_DATA
 }
 
 /**
@@ -57,6 +65,5 @@ export function isSupported(element) {
  * @returns {string[]} Array of element symbols
  */
 export function getSupportedElements() {
-  // TODO: Return array of keys from ATOMIC_DATA
-  throw new Error('Not implemented')
+  return Object.keys(ATOMIC_DATA)
 }

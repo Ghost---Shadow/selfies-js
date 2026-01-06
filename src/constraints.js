@@ -25,14 +25,29 @@ const PRESET_CONSTRAINTS = {
 
   // Octet rule (stricter, follows traditional chemistry)
   octet_rule: {
-    // TODO: Fill in octet rule constraints
-    // More restrictive: S→2, P→3, etc.
+    'H': 1,
+    'F': 1, 'Cl': 1, 'Br': 1, 'I': 1,
+    'O': 2, 'O+1': 3, 'O-1': 1,
+    'N': 3, 'N+1': 4, 'N-1': 2,
+    'C': 4, 'C+1': 3, 'C-1': 3,
+    'B': 3, 'B+1': 2, 'B-1': 4,
+    'S': 2, 'S+1': 3, 'S-1': 1,  // Stricter than default
+    'P': 3, 'P+1': 2, 'P-1': 4,  // Stricter than default
+    '?': 8
   },
 
   // Hypervalent (more permissive for heavy elements)
   hypervalent: {
-    // TODO: Fill in hypervalent constraints
-    // More permissive: Cl/Br/I→7, N→5, etc.
+    'H': 1,
+    'F': 1,
+    'Cl': 7, 'Br': 7, 'I': 7,  // More permissive for halogens
+    'O': 2, 'O+1': 3, 'O-1': 1,
+    'N': 5, 'N+1': 6, 'N-1': 4,  // More permissive
+    'C': 4, 'C+1': 3, 'C-1': 3,
+    'B': 3, 'B+1': 2, 'B-1': 4,
+    'S': 6, 'S+1': 5, 'S-1': 5,
+    'P': 5, 'P+1': 4, 'P-1': 6,
+    '?': 8
   }
 }
 
@@ -53,9 +68,11 @@ let _currentConstraints = { ...PRESET_CONSTRAINTS.default }
  *   // { 'C': 4, 'N': 3, 'O': 2, ... }
  */
 export function getPresetConstraints(name) {
-  // TODO: Validate preset name
-  // TODO: Return copy of preset constraints
-  throw new Error('Not implemented')
+  if (!(name in PRESET_CONSTRAINTS)) {
+    throw new Error(`Unknown preset: ${name}. Valid presets: default, octet_rule, hypervalent`)
+  }
+  // Return a copy to prevent mutation
+  return { ...PRESET_CONSTRAINTS[name] }
 }
 
 /**
@@ -67,8 +84,8 @@ export function getPresetConstraints(name) {
  *   console.log(constraints['C'])  // 4
  */
 export function getSemanticConstraints() {
-  // TODO: Return copy of current constraints
-  throw new Error('Not implemented')
+  // Return a copy to prevent mutation
+  return { ..._currentConstraints }
 }
 
 /**
@@ -85,10 +102,11 @@ export function getSemanticConstraints() {
  *   })
  */
 export function setSemanticConstraints(constraints) {
-  // TODO: Validate constraints object
-  // TODO: Update _currentConstraints
-  // TODO: Invalidate any cached alphabets that depend on constraints
-  throw new Error('Not implemented')
+  // Validate constraints object
+  validateConstraints(constraints)
+
+  // Update current constraints
+  _currentConstraints = { ...constraints }
 }
 
 /**
@@ -103,10 +121,16 @@ export function setSemanticConstraints(constraints) {
  *   getBondingCapacity('O', -1)  // 1 (O-1)
  */
 export function getBondingCapacity(element, charge = 0) {
-  // TODO: Build key from element + charge
-  // TODO: Look up in current constraints
-  // TODO: Fall back to '?' default if not found
-  throw new Error('Not implemented')
+  // Build key from element + charge
+  const key = charge === 0 ? element : `${element}${charge > 0 ? '+' : ''}${charge}`
+
+  // Look up in current constraints
+  if (key in _currentConstraints) {
+    return _currentConstraints[key]
+  }
+
+  // Fall back to '?' default if not found
+  return _currentConstraints['?']
 }
 
 /**
@@ -116,11 +140,27 @@ export function getBondingCapacity(element, charge = 0) {
  * @throws {Error} If constraints are invalid with explanation
  */
 export function validateConstraints(constraints) {
-  // TODO: Check that constraints is an object
-  // TODO: Check that all values are positive integers
-  // TODO: Check that '?' default is present
-  // TODO: Check that common elements are present
-  throw new Error('Not implemented')
+  // Check that constraints is an object
+  if (typeof constraints !== 'object' || constraints === null) {
+    throw new Error('Constraints must be an object')
+  }
+
+  // Check that '?' default is present
+  if (!('?' in constraints)) {
+    throw new Error("Constraints must include '?' default for unknown elements")
+  }
+
+  // Check that all values are positive integers
+  for (const [element, capacity] of Object.entries(constraints)) {
+    if (!Number.isInteger(capacity)) {
+      throw new Error(`Bonding capacity for ${element} must be an integer, got ${capacity}`)
+    }
+    if (capacity < 0) {
+      throw new Error(`Bonding capacity for ${element} must be non-negative, got ${capacity}`)
+    }
+  }
+
+  return true
 }
 
 /**
@@ -134,15 +174,13 @@ export function validateConstraints(constraints) {
  * Used during parsing to enforce semantic validity
  */
 export function wouldViolateConstraints(element, charge, usedBonds, newBondOrder) {
-  // TODO: Get bonding capacity for element
-  // TODO: Check if usedBonds + newBondOrder > capacity
-  throw new Error('Not implemented')
+  const capacity = getBondingCapacity(element, charge)
+  return usedBonds + newBondOrder > capacity
 }
 
 /**
  * Resets constraints to default preset
  */
 export function resetConstraints() {
-  // TODO: Reset to default preset
-  throw new Error('Not implemented')
+  _currentConstraints = { ...PRESET_CONSTRAINTS.default }
 }

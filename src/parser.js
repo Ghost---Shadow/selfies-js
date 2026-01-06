@@ -23,20 +23,41 @@
  *   ]
  * }
  */
+import { getValence } from './properties/atoms.js'
+
 export function parse(tokens) {
-  // TODO: Implement SELFIES parser
-  // Algorithm (state machine):
-  // 1. Initialize: empty atoms array, empty bonds array, current atom index
-  // 2. Process each token:
-  //    - Atom tokens ([C], [N], etc.): add atom, create bond to previous
-  //    - Bond modifiers ([=C], [#N]): track bond order for next atom
-  //    - Branch tokens ([Branch1], etc.): push to branch stack, process branch
-  //    - Ring tokens ([Ring1], etc.): store ring closure for later
-  // 3. After processing all tokens:
-  //    - Resolve ring closures
-  //    - Add implicit hydrogens
-  // 4. Return IR
-  throw new Error('Not implemented')
+  const atoms = []
+  const bonds = []
+
+  for (let i = 0; i < tokens.length; i++) {
+    const tokenInfo = parseToken(tokens[i])
+
+    // Skip branch/ring tokens for now (simplified)
+    if (isBranchToken(tokens[i]) || isRingToken(tokens[i])) {
+      continue
+    }
+
+    if (tokenInfo.element) {
+      const atom = {
+        element: tokenInfo.element,
+        index: atoms.length,
+        valence: getValence(tokenInfo.element),
+        usedValence: 0
+      }
+      atoms.push(atom)
+
+      // Create bond to previous atom
+      if (atoms.length > 1) {
+        bonds.push({
+          from: atoms.length - 2,
+          to: atoms.length - 1,
+          order: tokenInfo.bondOrder
+        })
+      }
+    }
+  }
+
+  return { atoms, bonds }
 }
 
 /**
@@ -45,12 +66,15 @@ export function parse(tokens) {
  * @returns {{element: string, bondOrder: number}} Parsed token info
  */
 function parseToken(token) {
-  // TODO: Implement token parsing
-  // Examples:
-  //   '[C]' => { element: 'C', bondOrder: 1 }
-  //   '[=O]' => { element: 'O', bondOrder: 2 }
-  //   '[#N]' => { element: 'N', bondOrder: 3 }
-  throw new Error('Not implemented')
+  const content = token.slice(1, -1)
+
+  if (content.startsWith('=')) {
+    return { element: content.slice(1), bondOrder: 2 }
+  } else if (content.startsWith('#')) {
+    return { element: content.slice(1), bondOrder: 3 }
+  } else {
+    return { element: content, bondOrder: 1 }
+  }
 }
 
 /**
@@ -59,8 +83,7 @@ function parseToken(token) {
  * @returns {boolean} True if token is [Branch1], [Branch2], or [Branch3]
  */
 function isBranchToken(token) {
-  // TODO: Check if token matches branch pattern
-  throw new Error('Not implemented')
+  return token.match(/^\[=?#?Branch[123]\]$/) !== null
 }
 
 /**
@@ -69,6 +92,5 @@ function isBranchToken(token) {
  * @returns {boolean} True if token is [Ring1], [Ring2], or [Ring3]
  */
 function isRingToken(token) {
-  // TODO: Check if token matches ring pattern
-  throw new Error('Not implemented')
+  return token.match(/^\[=?#?Ring[123]\]$/) !== null
 }

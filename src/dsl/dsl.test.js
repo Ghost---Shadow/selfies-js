@@ -3,9 +3,9 @@
  */
 
 import { describe, test, expect } from 'bun:test'
-import { parse } from '../src/dsl/parser.js'
-import { resolve, resolveAll } from '../src/dsl/resolver.js'
-import { getDependencies, getDependents } from '../src/dsl/analyzer.js'
+import { parse } from './parser.js'
+import { resolve, resolveAll } from './resolver.js'
+import { getDependencies, getDependents } from './analyzer.js'
 
 describe('parse', () => {
   // TODO: Basic parsing

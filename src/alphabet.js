@@ -21,17 +21,20 @@ let _semanticAlphabet = null
  * @returns {Set<string>} Set of all valid SELFIES tokens
  */
 export function getAlphabet() {
-  // TODO: Build and cache alphabet
-  // Include:
-  // - Basic atoms: [C], [N], [O], [S], [P], [F], [Cl], [Br], [I], [B]
-  // - Bond modifiers: [=C], [=N], [=O], [#C], [#N], etc.
-  // - Branches: [Branch1], [Branch2], [Branch3]
-  // - Rings: [Ring1], [Ring2], [Ring3]
-  // - Special tokens for branch/ring length specifiers
-
   if (_alphabet === null) {
     _alphabet = new Set()
-    // TODO: Populate alphabet
+
+    // Add all atom tokens (basic, double bond, triple bond)
+    const atomTokens = buildAtomTokens()
+    for (const token of atomTokens) {
+      _alphabet.add(token)
+    }
+
+    // Add structural tokens (branches, rings, length specifiers)
+    const structuralTokens = buildStructuralTokens()
+    for (const token of structuralTokens) {
+      _alphabet.add(token)
+    }
   }
 
   return _alphabet
@@ -45,16 +48,15 @@ export function getAlphabet() {
  * regardless of context (no branch/ring tokens, etc.)
  */
 export function getSemanticAlphabet() {
-  // TODO: Build and cache semantic alphabet
-  // Include only:
-  // - Basic atoms: [C], [N], [O], etc.
-  // - Bond modifiers: [=C], [#N], etc.
-  // Exclude:
-  // - Branch/Ring tokens (context-dependent)
-
   if (_semanticAlphabet === null) {
     _semanticAlphabet = new Set()
-    // TODO: Populate semantic alphabet
+
+    // Add only atom tokens (basic, double bond, triple bond)
+    // Exclude structural tokens (Branch, Ring) as they are context-dependent
+    const atomTokens = buildAtomTokens()
+    for (const token of atomTokens) {
+      _semanticAlphabet.add(token)
+    }
   }
 
   return _semanticAlphabet
@@ -66,8 +68,7 @@ export function getSemanticAlphabet() {
  * @returns {boolean} True if token is valid
  */
 export function isValidToken(token) {
-  // TODO: Check if token is in alphabet
-  throw new Error('Not implemented')
+  return getAlphabet().has(token)
 }
 
 /**
@@ -76,8 +77,7 @@ export function isValidToken(token) {
  * @returns {boolean} True if token is semantic-robust
  */
 export function isSemanticRobust(token) {
-  // TODO: Check if token is in semantic alphabet
-  throw new Error('Not implemented')
+  return getSemanticAlphabet().has(token)
 }
 
 /**
@@ -85,12 +85,16 @@ export function isSemanticRobust(token) {
  * @returns {string[]} Array of atom tokens
  */
 function buildAtomTokens() {
-  // TODO: Generate atom tokens
-  // For each element (C, N, O, S, P, F, Cl, Br, I, B):
-  //   - Add basic token: [C]
-  //   - Add double bond: [=C]
-  //   - Add triple bond: [#C]
-  throw new Error('Not implemented')
+  const elements = ['C', 'N', 'O', 'S', 'P', 'F', 'Cl', 'Br', 'I', 'B']
+  const tokens = []
+
+  for (const element of elements) {
+    tokens.push(`[${element}]`)      // basic atom
+    tokens.push(`[=${element}]`)     // double bond
+    tokens.push(`[#${element}]`)     // triple bond
+  }
+
+  return tokens
 }
 
 /**
@@ -98,11 +102,18 @@ function buildAtomTokens() {
  * @returns {string[]} Array of structural tokens
  */
 function buildStructuralTokens() {
-  // TODO: Generate structural tokens
-  // - [Branch1], [Branch2], [Branch3]
-  // - [Ring1], [Ring2], [Ring3]
-  // - Numeric tokens used as length specifiers
-  throw new Error('Not implemented')
+  const tokens = []
+
+  // Branch and Ring tokens
+  tokens.push('[Branch1]', '[Branch2]', '[Branch3]')
+  tokens.push('[Ring1]', '[Ring2]', '[Ring3]')
+
+  // Numeric tokens used as length specifiers (based on atom tokens)
+  // These are the same as bond-modified atoms but used as numbers
+  tokens.push('[=Branch1]', '[=Branch2]', '[=Branch3]')
+  tokens.push('[#Branch1]', '[#Branch2]', '[#Branch3]')
+
+  return tokens
 }
 
 /**
@@ -119,13 +130,17 @@ function buildStructuralTokens() {
  * Reference: selfies-py/selfies/utils/selfies_utils.py::get_alphabet_from_selfies()
  */
 export function getAlphabetFromSelfies(selfiesIterable) {
-  // TODO: Implement alphabet extraction
-  // Algorithm:
-  // 1. Create empty Set
-  // 2. For each SELFIES string in iterable:
-  //    a. Tokenize it
-  //    b. Add each token to the Set
-  // 3. Return the Set
-  // Note: Uses Set for automatic deduplication
-  throw new Error('Not implemented')
+  // TODO: Will implement this after tokenizer is ready
+  // For now, manually tokenize by extracting [...] patterns
+  const alphabet = new Set()
+
+  for (const selfies of selfiesIterable) {
+    // Simple regex-based tokenization (temporary until tokenizer.js is ready)
+    const tokens = selfies.match(/\[[^\]]+\]/g) || []
+    for (const token of tokens) {
+      alphabet.add(token)
+    }
+  }
+
+  return alphabet
 }

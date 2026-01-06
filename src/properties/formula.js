@@ -25,15 +25,10 @@ import { parse } from '../parser.js'
  *   getFormula('[N][C][C][=O]') // => 'C2H5NO'
  */
 export function getFormula(selfies) {
-  // TODO: Implement formula generation
-  // Algorithm:
-  // 1. Tokenize SELFIES string
-  // 2. Parse into IR
-  // 3. Count atoms (including implicit hydrogens)
-  // 4. Sort in Hill notation order
-  // 5. Format as string (omit 1 counts)
-  // 6. Return formula
-  throw new Error('Not implemented')
+  const tokens = tokenize(selfies)
+  const ir = parse(tokens)
+  const counts = countAtoms(ir)
+  return formatHill(counts)
 }
 
 /**
@@ -42,9 +37,33 @@ export function getFormula(selfies) {
  * @returns {Object} Map of element to count
  */
 function countAtoms(ir) {
-  // TODO: Count atoms from IR (same as in molecularWeight.js)
-  // Consider extracting this to a shared utility
-  throw new Error('Not implemented')
+  const counts = {}
+
+  // Count explicit atoms
+  for (const atom of ir.atoms) {
+    counts[atom.element] = (counts[atom.element] || 0) + 1
+  }
+
+  // Calculate used valence from bonds
+  const usedValence = new Array(ir.atoms.length).fill(0)
+  for (const bond of ir.bonds) {
+    usedValence[bond.from] += bond.order
+    usedValence[bond.to] += bond.order
+  }
+
+  // Add implicit hydrogens
+  let totalH = 0
+  for (let i = 0; i < ir.atoms.length; i++) {
+    const atom = ir.atoms[i]
+    const implicitH = Math.max(0, atom.valence - usedValence[i])
+    totalH += implicitH
+  }
+
+  if (totalH > 0) {
+    counts['H'] = totalH
+  }
+
+  return counts
 }
 
 /**
@@ -57,13 +76,28 @@ function countAtoms(ir) {
  *   formatHill({ H: 2, O: 1 }) // => 'H2O'
  */
 function formatHill(counts) {
-  // TODO: Format in Hill notation
-  // Algorithm:
-  // 1. Extract counts for C and H (if present)
-  // 2. Sort remaining elements alphabetically
-  // 3. Build string: C, H, then others
-  // 4. For each element: append symbol + count (omit if count is 1)
-  throw new Error('Not implemented')
+  let formula = ''
+
+  // C first
+  if (counts['C']) {
+    formula += formatElement('C', counts['C'])
+  }
+
+  // H second
+  if (counts['H']) {
+    formula += formatElement('H', counts['H'])
+  }
+
+  // Other elements alphabetically
+  const others = Object.keys(counts)
+    .filter(el => el !== 'C' && el !== 'H')
+    .sort()
+
+  for (const element of others) {
+    formula += formatElement(element, counts[element])
+  }
+
+  return formula
 }
 
 /**
@@ -73,8 +107,5 @@ function formatHill(counts) {
  * @returns {string} Formatted string (e.g., 'C2', 'O', 'H3')
  */
 function formatElement(element, count) {
-  // TODO: Format element with count
-  // If count is 1, return just element symbol
-  // Otherwise return element + count
-  throw new Error('Not implemented')
+  return count === 1 ? element : element + count
 }

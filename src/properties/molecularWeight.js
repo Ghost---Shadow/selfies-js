@@ -19,15 +19,17 @@ import { getAtomicMass } from './atoms.js'
  *   getMolecularWeight('[C]') // => 16.043 (methane: CH4)
  */
 export function getMolecularWeight(selfies) {
-  // TODO: Implement molecular weight calculation
-  // Algorithm:
-  // 1. Tokenize SELFIES string
-  // 2. Parse into IR
-  // 3. Count atoms (including implicit hydrogens)
-  // 4. Look up atomic mass for each element
-  // 5. Sum: (count * mass) for each element
-  // 6. Return total
-  throw new Error('Not implemented')
+  const tokens = tokenize(selfies)
+  const ir = parse(tokens)
+
+  const counts = countAtoms(ir)
+
+  let totalWeight = 0
+  for (const [element, count] of Object.entries(counts)) {
+    totalWeight += getAtomicMass(element) * count
+  }
+
+  return totalWeight
 }
 
 /**
@@ -39,12 +41,33 @@ export function getMolecularWeight(selfies) {
  *   { 'C': 2, 'H': 6, 'O': 1 }  // for ethanol
  */
 function countAtoms(ir) {
-  // TODO: Count atoms from IR
-  // 1. Count explicit atoms from ir.atoms
-  // 2. Calculate implicit hydrogens for each atom:
-  //    implicitH = valence - usedValence
-  // 3. Return element -> count map
-  throw new Error('Not implemented')
+  const counts = {}
+
+  // Count explicit atoms and calculate used valence
+  for (const atom of ir.atoms) {
+    counts[atom.element] = (counts[atom.element] || 0) + 1
+  }
+
+  // Calculate used valence from bonds
+  const usedValence = new Array(ir.atoms.length).fill(0)
+  for (const bond of ir.bonds) {
+    usedValence[bond.from] += bond.order
+    usedValence[bond.to] += bond.order
+  }
+
+  // Add implicit hydrogens
+  let totalH = 0
+  for (let i = 0; i < ir.atoms.length; i++) {
+    const atom = ir.atoms[i]
+    const implicitH = Math.max(0, atom.valence - usedValence[i])
+    totalH += implicitH
+  }
+
+  if (totalH > 0) {
+    counts['H'] = totalH
+  }
+
+  return counts
 }
 
 /**
@@ -53,7 +76,5 @@ function countAtoms(ir) {
  * @returns {number} Number of implicit hydrogens
  */
 function getImplicitHydrogens(atom) {
-  // TODO: Calculate implicit H count
-  // implicitH = atom.valence - atom.usedValence
-  throw new Error('Not implemented')
+  return atom.valence - atom.usedValence
 }
