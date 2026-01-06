@@ -1,0 +1,7 @@
+# Forward reference test case
+# This should generate an error or warning
+# because ethanol references ethyl before it's defined
+
+[ethanol] = [ethyl][hydroxyl]
+[ethyl] = [C][C]
+[hydroxyl] = [O]

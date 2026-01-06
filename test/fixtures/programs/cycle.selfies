@@ -1,0 +1,11 @@
+# Circular dependency test case
+# This should generate an error
+# a depends on b, b depends on a
+
+[a] = [b]
+[b] = [a]
+
+# Another cycle
+[x] = [y]
+[y] = [z]
+[z] = [x]

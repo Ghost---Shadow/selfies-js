@@ -1,0 +1,8 @@
+# Simple DSL test case
+# Basic definitions with no dependencies
+
+[methyl] = [C]
+[ethyl] = [C][C]
+[propyl] = [C][C][C]
+[hydroxyl] = [O]
+[amino] = [N]

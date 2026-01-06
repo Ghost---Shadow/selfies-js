@@ -1,0 +1,24 @@
+{
+  "name": "selfies-js",
+  "version": "0.1.0",
+  "description": "Pure JavaScript SELFIES encoder/decoder",
+  "type": "module",
+  "main": "src/index.js",
+  "exports": {
+    ".": "./src/index.js"
+  },
+  "scripts": {
+    "test": "bun test",
+    "bench": "bun run bench/decode.bench.js"
+  },
+  "keywords": [
+    "selfies",
+    "smiles",
+    "chemistry",
+    "cheminformatics",
+    "molecules"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {}
+}

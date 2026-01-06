@@ -1,0 +1,4 @@
+# Bun configuration for selfies-js
+
+[test]
+preload = []

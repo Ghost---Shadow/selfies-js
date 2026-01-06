@@ -1,0 +1,68 @@
+{
+  "description": "Test cases for SELFIES encoding/decoding",
+  "molecules": [
+    {
+      "name": "Methane",
+      "selfies": "[C]",
+      "smiles": "C",
+      "formula": "CH4",
+      "molecularWeight": 16.043
+    },
+    {
+      "name": "Ethane",
+      "selfies": "[C][C]",
+      "smiles": "CC",
+      "formula": "C2H6",
+      "molecularWeight": 30.070
+    },
+    {
+      "name": "Ethanol",
+      "selfies": "[C][C][O]",
+      "smiles": "CCO",
+      "formula": "C2H6O",
+      "molecularWeight": 46.068
+    },
+    {
+      "name": "Ethene",
+      "selfies": "[C][=C]",
+      "smiles": "C=C",
+      "formula": "C2H4",
+      "molecularWeight": 28.054
+    },
+    {
+      "name": "Acetylene",
+      "selfies": "[C][#C]",
+      "smiles": "C#C",
+      "formula": "C2H2",
+      "molecularWeight": 26.038
+    },
+    {
+      "name": "Isobutane",
+      "selfies": "[C][C][Branch1][C][C][C]",
+      "smiles": "CC(C)C",
+      "formula": "C4H10",
+      "molecularWeight": 58.123
+    },
+    {
+      "name": "Neopentane",
+      "selfies": "[C][C][Branch1][C][C][Branch1][C][C][C]",
+      "smiles": "CC(C)(C)C",
+      "formula": "C5H12",
+      "molecularWeight": 72.150
+    },
+    {
+      "name": "Cyclopropane",
+      "selfies": "[C][C][C][Ring1][C]",
+      "smiles": "C1CC1",
+      "formula": "C3H6",
+      "molecularWeight": 42.081
+    },
+    {
+      "name": "Benzene",
+      "selfies": "[C][=C][C][=C][C][=C][Ring1][=Branch1]",
+      "smiles": "C1=CC=CC=C1",
+      "formula": "C6H6",
+      "molecularWeight": 78.114
+    }
+  ]
+}
