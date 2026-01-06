@@ -121,7 +121,8 @@ describe('selfies-py compatibility tests', () => {
     test('decodes two-letter elements', () => {
       expect(decode('[C][Cl]')).toBe('CCl')
       expect(decode('[C][Br]')).toBe('CBr')
-      expect(decode('[C][=Cl]')).toBe('C=Cl')
+      // Cl has capacity 1, so double bond request is capped to single bond
+      expect(decode('[C][=Cl]')).toBe('CCl')
     })
   })
 
