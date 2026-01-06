@@ -96,6 +96,11 @@ export function decodeToAST(selfies) {
       )
       i += branchResult.consumed
       state = nextState
+
+      // If branch consumed all remaining tokens, stop
+      if (i >= tokens.length) {
+        break
+      }
       continue
     }
 
@@ -396,14 +401,28 @@ function buildSmiles(atoms, bonds, rings) {
 
     // Write ring closures for this atom
     for (const ring of rings) {
-      if (ring.from === atomIndex && visited.has(ring.to)) {
+      const isFrom = ring.from === atomIndex
+      const isTo = ring.to === atomIndex
+
+      if (isFrom && visited.has(ring.to)) {
+        // Closing ring: we've visited the other end
         const ringNum = ringNumbers.get(`${atomIndex}-${ring.to}`)
         if (ring.order === 2) smiles.push('=')
         if (ring.order === 3) smiles.push('#')
         smiles.push(ringNum.toString())
-      }
-      if (ring.to === atomIndex && !visited.has(ring.from)) {
-        const ringNum = ringNumbers.get(`${atomIndex}-${ring.from}`)
+      } else if (isTo && visited.has(ring.from)) {
+        // Closing ring (other direction)
+        const ringNum = ringNumbers.get(`${ring.from}-${atomIndex}`)
+        if (ring.order === 2) smiles.push('=')
+        if (ring.order === 3) smiles.push('#')
+        smiles.push(ringNum.toString())
+      } else if ((isFrom && !visited.has(ring.to)) || (isTo && !visited.has(ring.from))) {
+        // Opening ring: we haven't visited the other end yet
+        const ringNum = isFrom ?
+          ringNumbers.get(`${atomIndex}-${ring.to}`) :
+          ringNumbers.get(`${ring.from}-${atomIndex}`)
+        if (ring.order === 2) smiles.push('=')
+        if (ring.order === 3) smiles.push('#')
         smiles.push(ringNum.toString())
       }
     }

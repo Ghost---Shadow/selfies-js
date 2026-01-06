@@ -4,7 +4,7 @@
  */
 
 import { describe, test, expect } from 'bun:test'
-import { decode } from '../src/decoder.js'
+import { decode, decodeToAST } from '../src/decoder.js'
 import { encode } from '../src/encoder.js'
 
 describe('selfies-py compatibility tests', () => {
@@ -107,6 +107,24 @@ describe('selfies-py compatibility tests', () => {
     test('handles branch at beginning of branch', () => {
       // Nested branches
       const s = '[C@][=Branch1][Branch1][Branch1][C][Br][Cl][F]'
+      const ast = decodeToAST(s)
+
+      // Assert full AST structure
+      expect(ast).toEqual({
+        atoms: [
+          { element: 'C', capacity: 4, stereo: 'C@' },
+          { element: 'Br', capacity: 1, stereo: null },
+          { element: 'Cl', capacity: 1, stereo: null },
+          { element: 'F', capacity: 1, stereo: null }
+        ],
+        bonds: [
+          { from: 0, to: 1, order: 2 },
+          { from: 0, to: 2, order: 1 },
+          { from: 0, to: 3, order: 1 }
+        ],
+        rings: []
+      })
+
       expect(decode(s)).toBe('[C@](Br)(Cl)F')
     })
   })
@@ -134,7 +152,28 @@ describe('selfies-py compatibility tests', () => {
 
     test('handles oversized branch', () => {
       // Branch with Q larger than remaining SELFIES length
-      expect(decode('[C][Branch2][O][O][C][C][S][F][C]')).toBe('CCCSF')
+      const s = '[C][Branch2][O][O][C][C][S][F][C]'
+      const ast = decodeToAST(s)
+
+      // Assert full AST structure
+      expect(ast).toEqual({
+        atoms: [
+          { element: 'C', capacity: 4, stereo: null },
+          { element: 'C', capacity: 4, stereo: null },
+          { element: 'C', capacity: 4, stereo: null },
+          { element: 'S', capacity: 6, stereo: null },
+          { element: 'F', capacity: 1, stereo: null }
+        ],
+        bonds: [
+          { from: 0, to: 1, order: 1 },
+          { from: 1, to: 2, order: 1 },
+          { from: 2, to: 3, order: 1 },
+          { from: 3, to: 4, order: 1 }
+        ],
+        rings: []
+      })
+
+      expect(decode(s)).toBe('CCCSF')
     })
 
     test('handles oversized ring', () => {
