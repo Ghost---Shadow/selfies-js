@@ -42,3 +42,6 @@ export {
   ValidationError,
   ParseError,
 } from './errors.js'
+
+// Renderers (RDKit-based)
+export { renderSelfies, initRDKit } from './renderers/svg.js'

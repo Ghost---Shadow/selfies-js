@@ -20,5 +20,7 @@
   ],
   "author": "",
   "license": "MIT",
-  "devDependencies": {}
+  "dependencies": {
+    "@rdkit/rdkit": "^2025.3.4-1.0.0"
+  }
 }
