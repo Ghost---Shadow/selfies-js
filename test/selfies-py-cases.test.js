@@ -3,9 +3,11 @@
  * Source: https://github.com/aspuru-guzik-group/selfies/blob/master/tests/test_specific_cases.py
  */
 
-import { describe, test, expect } from 'bun:test'
+import { describe, test, expect, beforeAll } from 'bun:test'
 import { decode, decodeToAST } from '../src/decoder.js'
 import { encode } from '../src/encoder.js'
+import { isChemicallyValid, validateRoundtrip } from '../src/chemistryValidator.js'
+import { initRDKit } from '../src/renderers/svg.js'
 
 describe('selfies-py compatibility tests', () => {
   describe('basic encoding/decoding', () => {
@@ -36,6 +38,23 @@ describe('selfies-py compatibility tests', () => {
       expect(decode('[C][=O]')).toBe('C=O')
       expect(decode('[C][#C]')).toBe('C#C')
       expect(decode('[C][#N]')).toBe('C#N')
+    })
+
+    test('encodes toluene to SELFIES', () => {
+      // Fixed: Encoder now correctly separates C and c as different atoms
+      // Uses [=Branch1] (Q=4) for ring closure instead of [=N] (Q=11)
+      const tolueneSMILES = 'Cc1ccccc1'
+      const correctSELFIES = '[C][C][=C][C][=C][C][=C][Ring1][=Branch1]'
+      expect(encode(tolueneSMILES)).toBe(correctSELFIES)
+    })
+
+    test('decodes toluene SELFIES correctly', () => {
+      // Fixed: Now decodes to correct 7-carbon toluene structure
+      // Output format is Kekulé notation with explicit double bonds
+      const tolueneSELFIES = '[C][C][=C][C][=C][C][=C][Ring1][=Branch1]'
+      const decoded = decode(tolueneSELFIES)
+      // Should decode to 7-carbon structure (toluene)
+      expect(decoded).toBe('CC1=CC=CC=C1')
     })
   })
 
@@ -86,9 +105,10 @@ describe('selfies-py compatibility tests', () => {
     })
 
     test('encodes cyclic molecules', () => {
-      expect(encode('C1CC1')).toBe('[C][C][C][Ring1][=C]')
-      // Benzene with aromatic notation
-      expect(encode('c1ccccc1')).toBe('[C][=C][C][=C][C][=C][Ring1][=N]')
+      // Fixed: Now uses [Ring1] (Q=1) instead of [=C] (Q=12)
+      expect(encode('C1CC1')).toBe('[C][C][C][Ring1][Ring1]')
+      // Fixed: Benzene now uses [=Branch1] (Q=4) instead of [=N] (Q=11)
+      expect(encode('c1ccccc1')).toBe('[C][=C][C][=C][C][=C][Ring1][=Branch1]')
     })
   })
 
@@ -191,6 +211,10 @@ describe('selfies-py compatibility tests', () => {
   })
 
   describe('roundtrip encoding/decoding', () => {
+    beforeAll(async () => {
+      await initRDKit()
+    })
+
     test('roundtrips simple molecules', () => {
       const molecules = ['C', 'CC', 'CCO', 'C=C', 'C#C', 'C1CC1']
 
@@ -202,12 +226,39 @@ describe('selfies-py compatibility tests', () => {
       }
     })
 
+    test('roundtrips produce chemically valid molecules', async () => {
+      const molecules = ['C', 'CC', 'CCO', 'C=C', 'C#C', 'C1CC1']
+
+      for (const smiles of molecules) {
+        const selfies = encode(smiles)
+        const valid = await isChemicallyValid(selfies)
+        expect(valid).toBe(true)
+      }
+    })
+
+    test('roundtrips preserve molecular structure using canonical SMILES', async () => {
+      const molecules = ['C', 'CC', 'CCO', 'C=C', 'C#C', 'C1CC1']
+
+      for (const smiles of molecules) {
+        const selfies = encode(smiles)
+        const valid = await validateRoundtrip(smiles, selfies)
+        expect(valid).toBe(true)
+      }
+    })
+
     test('roundtrips branched molecules', () => {
       const smiles = 'CC(C)C'
       const selfies = encode(smiles)
       expect(selfies).toBe('[C][C][Branch1][C][C][C]')
       const decoded = decode(selfies)
       expect(decoded).toBe('CC(C)C')
+    })
+
+    test('roundtrips branched molecules with chemistry validation', async () => {
+      const smiles = 'CC(C)C'
+      const selfies = encode(smiles)
+      const valid = await validateRoundtrip(smiles, selfies)
+      expect(valid).toBe(true)
     })
   })
 
@@ -231,10 +282,48 @@ describe('selfies-py compatibility tests', () => {
   })
 
   describe('aromatic systems', () => {
+    beforeAll(async () => {
+      await initRDKit()
+    })
+
     test('handles aromatic benzene', () => {
       // Aromatic carbons with ring
+      // Fixed: Now uses [=Branch1] (Q=4) for proper ring closure
       const selfies = encode('c1ccccc1')
-      expect(selfies).toBe('[C][=C][C][=C][C][=C][Ring1][=N]')
+      expect(selfies).toBe('[C][=C][C][=C][C][=C][Ring1][=Branch1]')
+    })
+
+    test('aromatic benzene is chemically valid', async () => {
+      const selfies = encode('c1ccccc1')
+      const valid = await isChemicallyValid(selfies)
+      expect(valid).toBe(true)
+    })
+
+    test('aromatic benzene roundtrip preserves structure', async () => {
+      const selfies = encode('c1ccccc1')
+      const valid = await validateRoundtrip('c1ccccc1', selfies)
+      expect(valid).toBe(true)
+    })
+
+    test('encodes toluene (methylbenzene)', () => {
+      // Fixed: Now correctly encodes C and c as separate atoms
+      // Uses [=Branch1] (Q=4) for ring closure, not [=N] (Q=11)
+      const selfies = encode('Cc1ccccc1')
+      expect(selfies).toBe('[C][C][=C][C][=C][C][=C][Ring1][=Branch1]')
+    })
+
+    test('toluene is chemically valid', async () => {
+      // Fixed: Now decodes to correct 7-carbon toluene molecule
+      const selfies = encode('Cc1ccccc1')
+      const valid = await isChemicallyValid(selfies)
+      expect(valid).toBe(true)
+    })
+
+    test('toluene roundtrip preserves structure', async () => {
+      // Fixed: Roundtrip now correctly preserves toluene structure
+      const selfies = encode('Cc1ccccc1')
+      const valid = await validateRoundtrip('Cc1ccccc1', selfies)
+      expect(valid).toBe(true)
     })
 
     test('handles aromatic pyrrole', () => {
@@ -243,6 +332,12 @@ describe('selfies-py compatibility tests', () => {
       // Should alternate bonds and handle N
       expect(selfies).toContain('[N')
       expect(selfies).toContain('Ring1')
+    })
+
+    test('aromatic pyrrole is chemically valid', async () => {
+      const selfies = encode('c1cc[nH]c1')
+      const valid = await isChemicallyValid(selfies)
+      expect(valid).toBe(true)
     })
   })
 

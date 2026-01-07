@@ -37,11 +37,13 @@ describe('encode', () => {
   // TODO: Rings (POST-MVP)
   test('encodes benzene', () => {
     // Note: Using lowercase aromatic SMILES for benzene
-    expect(encode('c1ccccc1')).toBe('[C][=C][C][=C][C][=C][Ring1][=N]')
+    // Fixed: Now uses [=Branch1] (Q=4) instead of [=N] (Q=11)
+    expect(encode('c1ccccc1')).toBe('[C][=C][C][=C][C][=C][Ring1][=Branch1]')
   })
 
   test('encodes cyclopropane', () => {
-    expect(encode('C1CC1')).toBe('[C][C][C][Ring1][=C]')
+    // Fixed: Now uses [Ring1] (Q=1) instead of [=C] (Q=12)
+    expect(encode('C1CC1')).toBe('[C][C][C][Ring1][Ring1]')
   })
 
   // Error cases

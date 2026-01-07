@@ -43,5 +43,14 @@ export {
   ParseError,
 } from './errors.js'
 
+// Chemistry Validation (RDKit-based)
+export {
+  isChemicallyValid,
+  getCanonicalSmiles,
+  validateRoundtrip,
+  getValidationDetails,
+  batchValidate
+} from './chemistryValidator.js'
+
 // Renderers (RDKit-based)
 export { renderSelfies, initRDKit } from './renderers/svg.js'

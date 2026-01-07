@@ -6,6 +6,8 @@
  * how to represent branches and rings in SELFIES format.
  */
 
+import { getSelfiesFromIndex } from './grammar_rules.js'
+
 /**
  * Encodes a SMILES string to SELFIES
  * @param {string} smiles - The SMILES string to encode
@@ -110,7 +112,9 @@ function closeRing(ringNum, state) {
   const atomsInBetween = state.tokens.length - ringStartPos - 1
 
   state.tokens.push('[Ring1]')
-  state.tokens.push(getLengthToken(atomsInBetween))
+  // For decoder formula: targetIndex = prevAtomIndex - (Q.value + 1)
+  // We want: Q.value + 1 = atomsInBetween, so Q.value = atomsInBetween - 1
+  state.tokens.push(getLengthToken(atomsInBetween - 1))
   state.ringClosures.delete(ringNum)
 }
 
@@ -127,7 +131,9 @@ function handleBranch(smiles, index, state) {
   const branchSymbolCount = countSelfiesSymbols(branchTokens)
 
   state.tokens.push('[Branch1]')
-  state.tokens.push(getLengthToken(branchSymbolCount))
+  // For decoder formula: reads Q.value + 1 atoms from branch
+  // We want: Q.value + 1 = branchSymbolCount, so Q.value = branchSymbolCount - 1
+  state.tokens.push(getLengthToken(branchSymbolCount - 1))
   state.tokens.push(branchTokens)
 
   return endIndex + 1
@@ -287,13 +293,20 @@ function extractElementFromBracket(bracketContent) {
 function handleAliphaticAtom(smiles, index, state) {
   const char = smiles[index]
 
+  // Check if next character forms a two-letter element
   if (index + 1 < smiles.length && isLowerCase(smiles[index + 1])) {
-    state.tokens.push(`[${char}${smiles[index + 1]}]`)
-    return index + 2
-  } else {
-    state.tokens.push(`[${char}]`)
-    return index + 1
+    const twoLetter = char + smiles[index + 1]
+    // Valid two-letter elements: Cl, Br, Si, etc.
+    // NOT Cc, Cn, Co, etc. which are separate atoms
+    if (isTwoLetterElement(twoLetter)) {
+      state.tokens.push(`[${twoLetter}]`)
+      return index + 2
+    }
   }
+
+  // Single-letter element
+  state.tokens.push(`[${char}]`)
+  return index + 1
 }
 
 /**
@@ -331,23 +344,44 @@ function countSelfiesSymbols(selfiesString) {
 
 /**
  * Generates length token for branch/ring notation
- * @param {number} length - Length value (1-based)
+ * Uses INDEX_ALPHABET from grammar_rules.js for consistency with decoder
+ * @param {number} length - Length value (0-indexed, matching atom count)
  * @returns {string} Length token in SELFIES format
  * @throws {Error} If length is out of range
  */
 function getLengthToken(length) {
-  const lengthAlphabet = [
-    'C', '=C', '#C', 'N', '=N', '#N', 'O', '=O', '#O', 'S', '=S', '#S',
-    'P', '=P', '#P', 'F', '=F', '#F', 'Cl', '=Cl', '#Cl', 'Br', '=Br', '#Br',
-    'I', '=I', '#I', 'B', '=B', '#B',
-    'Branch1', '=Branch1', '#Branch1', 'Branch2', '=Branch2', '#Branch2', 'Branch3', '=Branch3', '#Branch3'
-  ]
+  // Use getSelfiesFromIndex to convert length to SELFIES symbols
+  // This ensures encoder and decoder use the same INDEX_ALPHABET
+  const symbols = getSelfiesFromIndex(length)
 
-  if (length < 1 || length > lengthAlphabet.length) {
-    throw new Error(`Branch/Ring length ${length} out of range (max ${lengthAlphabet.length})`)
+  // For single symbol, return it directly
+  if (symbols.length === 1) {
+    return symbols[0]
   }
 
-  return `[${lengthAlphabet[length - 1]}]`
+  // For multiple symbols, join them (for large indices requiring multiple tokens)
+  return symbols.join('')
+}
+
+/**
+ * Checks if a two-character string is a valid two-letter element symbol
+ * @param {string} symbol - Two-character string to check
+ * @returns {boolean} True if valid two-letter element
+ */
+function isTwoLetterElement(symbol) {
+  const twoLetterElements = new Set([
+    'Cl', 'Br', 'Si', 'Se', 'As', 'Al', 'Ca', 'Mg', 'Na', 'He',
+    'Li', 'Be', 'Ne', 'Ar', 'Kr', 'Xe', 'Rn', 'Sc', 'Ti', 'Cr',
+    'Mn', 'Fe', 'Co', 'Ni', 'Cu', 'Zn', 'Ga', 'Ge', 'Sr', 'Zr',
+    'Nb', 'Mo', 'Tc', 'Ru', 'Rh', 'Pd', 'Ag', 'Cd', 'In', 'Sn',
+    'Sb', 'Te', 'Ba', 'La', 'Ce', 'Pr', 'Nd', 'Pm', 'Sm', 'Eu',
+    'Gd', 'Tb', 'Dy', 'Ho', 'Er', 'Tm', 'Yb', 'Lu', 'Hf', 'Ta',
+    'Re', 'Os', 'Ir', 'Pt', 'Au', 'Hg', 'Tl', 'Pb', 'Bi', 'Po',
+    'At', 'Ra', 'Ac', 'Th', 'Pa', 'Np', 'Pu', 'Am', 'Cm', 'Bk',
+    'Cf', 'Es', 'Fm', 'Md', 'No', 'Lr', 'Rf', 'Db', 'Sg', 'Bh',
+    'Hs', 'Mt', 'Ds', 'Rg', 'Cn', 'Nh', 'Fl', 'Mc', 'Lv', 'Ts', 'Og'
+  ])
+  return twoLetterElements.has(symbol)
 }
 
 /**

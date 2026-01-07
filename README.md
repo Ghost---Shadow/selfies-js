@@ -10,7 +10,8 @@
 import {
   decode, encode, isValid,
   getMolecularWeight, getFormula,
-  lenSelfies, getSemanticConstraints
+  lenSelfies, getSemanticConstraints,
+  isChemicallyValid, getCanonicalSmiles, validateRoundtrip
 } from 'selfies-js'
 
 // SELFIES → SMILES
@@ -19,8 +20,15 @@ decode('[C][C][O]')  // 'CCO'
 // SMILES → SELFIES
 encode('CCO')  // '[C][C][O]'
 
-// Validation
+// Syntax validation
 isValid('[C][C][O]')  // true
+
+// Chemistry validation (requires RDKit)
+import { initRDKit } from 'selfies-js'
+await initRDKit()
+await isChemicallyValid('[C][C][O]')  // true - molecule is chemically valid
+await getCanonicalSmiles('[C][C][O]')  // 'CCO' - canonical SMILES representation
+await validateRoundtrip('CCO', '[C][C][O]')  // true - structure preserved
 
 // Properties
 getMolecularWeight('[C][C][O]')  // 46.07
@@ -34,9 +42,8 @@ const constraints = getSemanticConstraints()
 console.log(constraints['C'])  // 4 (max bonds for carbon)
 
 // SVG Rendering (using RDKit.js)
-import { renderSelfies, initRDKit } from 'selfies-js'
+import { renderSelfies } from 'selfies-js'
 
-await initRDKit() // Initialize once
 const svg = await renderSelfies('[C][C][O]', {
   width: 300,
   height: 300
@@ -54,11 +61,15 @@ npm install selfies-js
 - **Core:** Decode SELFIES to SMILES
 - **Core:** Encode SMILES to SELFIES
 - **Validation:** Syntax and semantic validation
+- **Chemistry Validation:** RDKit-based molecular validity checking ✨ NEW
+- **Canonical SMILES:** Structure comparison and roundtrip validation ✨ NEW
 - **Properties:** Molecular weight and formula calculation
 - **Constraints:** Customizable semantic constraints (bonding rules)
 - **Utilities:** Symbol counting, alphabet extraction
 - **DSL:** Define and resolve molecule libraries with named definitions
 - **Rendering:** SVG visualization of molecular structures
+
+> **New in this version:** Comprehensive chemistry validation using RDKit! See [CHEMISTRY_VALIDATION.md](CHEMISTRY_VALIDATION.md) for full documentation.
 
 ## Visualization
 
@@ -71,7 +82,7 @@ import { renderSelfies, initRDKit } from 'selfies-js'
 await initRDKit()
 
 // Render toluene
-const svg = await renderSelfies('[C][C][=C][C][=C][C][=C][Ring1][=N]', {
+const svg = await renderSelfies('[C][C][=C][C][=C][C][=C][Ring1][=Branch1]', {
   width: 300,
   height: 300
 })
