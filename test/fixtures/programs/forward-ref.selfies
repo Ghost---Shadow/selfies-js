@@ -1,7 +1,13 @@
-# Forward reference test case
-# This should generate an error or warning
-# because ethanol references ethyl before it's defined
+# Forward reference example
+# This file uses definitions before they are declared
+# Should produce warnings but still be valid
 
-[ethanol] = [ethyl][hydroxyl]
+[alcohol] = [ethyl][hydroxyl]
+
+# These are defined after being used above
 [ethyl] = [C][C]
 [hydroxyl] = [O]
+
+# This should work fine (backward reference)
+[longer_alcohol] = [propyl][hydroxyl]
+[propyl] = [C][C][C]

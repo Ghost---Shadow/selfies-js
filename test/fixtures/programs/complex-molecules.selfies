@@ -1,0 +1,25 @@
+# Complex organic molecules
+# Demonstrates branching and ring structures
+
+# Building blocks
+[methyl] = [C]
+[ethyl] = [methyl][C]
+[vinyl] = [C][=C]
+
+# Branched molecules
+[isobutane] = [C][C][Branch1][C][methyl][methyl]
+[neopentane] = [C][C][Branch1][C][methyl][Branch1][C][methyl][methyl]
+
+# Aromatic rings
+[benzene] = [C][=C][C][=C][C][=C][Ring1][=Branch1]
+[phenyl] = [C][=C][C][=C][C][=C][Ring1][=Branch1]
+
+# Substituted aromatics
+[toluene] = [phenyl][methyl]
+[styrene] = [phenyl][vinyl]
+
+# Cyclic molecules
+[cyclopropane] = [C][C][C][Ring1][C]
+[cyclobutane] = [C][C][C][C][Ring1][C]
+[cyclopentane] = [C][C][C][C][C][Ring1][Branch1]
+[cyclohexane] = [C][C][C][C][C][C][Ring1][Branch2]

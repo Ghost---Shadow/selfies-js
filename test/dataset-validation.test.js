@@ -24,8 +24,8 @@ describe('Dataset Validation', () => {
     await initRDKit()
   })
 
-  describe('Common drug molecules', () => {
-    const drugMolecules = [
+  describe('Common pharma molecules', () => {
+    const pharmaMolecules = [
       { name: 'Aspirin', smiles: 'CC(=O)Oc1ccccc1C(=O)O' },
       { name: 'Caffeine', smiles: 'CN1C=NC2=C1C(=O)N(C(=O)N2C)C' },
       { name: 'Ibuprofen', smiles: 'CC(C)Cc1ccc(cc1)C(C)C(=O)O' },
@@ -33,27 +33,27 @@ describe('Dataset Validation', () => {
       { name: 'Nicotine', smiles: 'CN1CCCC1c2cccnc2' }
     ]
 
-    test('encodes all drug molecules', () => {
-      for (const drug of drugMolecules) {
-        const selfies = encode(drug.smiles)
+    test('encodes all pharma molecules', () => {
+      for (const pharma of pharmaMolecules) {
+        const selfies = encode(pharma.smiles)
         expect(selfies).toBeTruthy()
         expect(selfies.length).toBeGreaterThan(0)
       }
     })
 
-    test('all drug molecules produce chemically valid SELFIES', async () => {
-      for (const drug of drugMolecules) {
-        const selfies = encode(drug.smiles)
+    test('all pharma molecules produce chemically valid SELFIES', async () => {
+      for (const pharma of pharmaMolecules) {
+        const selfies = encode(pharma.smiles)
         const valid = await isChemicallyValid(selfies)
         expect(valid).toBe(true)
       }
     })
 
-    test.skip('drug molecule roundtrips preserve structure', async () => {
-      // TODO: Some complex drug molecules may not roundtrip perfectly due to encoder limitations
-      for (const drug of drugMolecules) {
-        const selfies = encode(drug.smiles)
-        const valid = await validateRoundtrip(drug.smiles, selfies)
+    test('pharma molecule roundtrips preserve structure', async () => {
+      // Test that pharma molecules roundtrip correctly
+      for (const pharma of pharmaMolecules) {
+        const selfies = encode(pharma.smiles)
+        const valid = await validateRoundtrip(pharma.smiles, selfies)
         expect(valid).toBe(true)
       }
     })
@@ -91,8 +91,8 @@ describe('Dataset Validation', () => {
       }
     })
 
-    test.skip('all functional groups roundtrip correctly', async () => {
-      // TODO: Some functional groups may not roundtrip perfectly
+    test('all functional groups roundtrip correctly', async () => {
+      // Test that all functional groups roundtrip correctly
       for (const fg of functionalGroups) {
         const selfies = encode(fg.smiles)
         const valid = await validateRoundtrip(fg.smiles, selfies)
@@ -120,7 +120,7 @@ describe('Dataset Validation', () => {
       }
     })
 
-    test.skip('all heterocycles are chemically valid', async () => {
+    test('all heterocycles are chemically valid', async () => {
       // TODO: Some complex heterocycles may have encoder issues
       for (const het of heterocycles) {
         const selfies = encode(het.smiles)
@@ -129,8 +129,8 @@ describe('Dataset Validation', () => {
       }
     })
 
-    test.skip('all heterocycles roundtrip correctly', async () => {
-      // TODO: Some complex heterocycles may not roundtrip perfectly
+    test('all heterocycles roundtrip correctly', async () => {
+      // Test that heterocycles roundtrip correctly
       for (const het of heterocycles) {
         const selfies = encode(het.smiles)
         const valid = await validateRoundtrip(het.smiles, selfies)
@@ -161,8 +161,8 @@ describe('Dataset Validation', () => {
       }
     })
 
-    test.skip('complex molecules roundtrip correctly', async () => {
-      // TODO: Complex natural products may not roundtrip perfectly
+    test('complex molecules roundtrip correctly', async () => {
+      // Test that complex natural products roundtrip correctly
       for (const np of naturalProducts) {
         const selfies = encode(np.smiles)
         const valid = await validateRoundtrip(np.smiles, selfies)
@@ -197,12 +197,11 @@ describe('Dataset Validation', () => {
       expect(results.failures).toEqual([])
     })
 
-    test.skip('batch validation detects invalid molecules', async () => {
-      // TODO: Decoder currently doesn't validate element names, passes through invalid elements
-      // This is a known limitation - validation should be added to decoder
+    test('batch validation detects invalid molecules', async () => {
+      // Test that decoder validates element names
       const mixed = [
         '[C][C][O]',  // valid
-        '[Xyz]',       // invalid element (but decoder doesn't check)
+        '[Xyz]',       // invalid element
         '[C][=C]'      // valid
       ]
 
@@ -258,8 +257,8 @@ describe('Dataset Validation', () => {
   })
 
   describe('Error tracking and reporting', () => {
-    test.skip('provides detailed error information for failures', async () => {
-      // TODO: Decoder doesn't validate element names yet
+    test('provides detailed error information for failures', async () => {
+      // Test that detailed error information is provided for invalid elements
       const invalid = ['[Xyz]', '[InvalidElement]']
 
       for (const selfies of invalid) {
@@ -270,8 +269,8 @@ describe('Dataset Validation', () => {
       }
     })
 
-    test.skip('tracks multiple failures in batch', async () => {
-      // TODO: Decoder doesn't validate element names yet
+    test('tracks multiple failures in batch', async () => {
+      // Test that multiple failures are tracked in batch validation
       const mixed = [
         '[C]',     // valid
         '[Xyz]',   // invalid

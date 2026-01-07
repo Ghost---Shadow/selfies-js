@@ -1,5 +1,5 @@
 /**
- * Tests for DSL parsing and resolution
+ * Integration tests for DSL parsing and resolution
  */
 
 import { describe, test, expect } from 'bun:test'
@@ -7,103 +7,140 @@ import { parse } from './parser.js'
 import { resolve, resolveAll } from './resolver.js'
 import { getDependencies, getDependents } from './analyzer.js'
 
-describe('parse', () => {
-  // TODO: Basic parsing
-  test('parses simple definition', () => {
-    // TODO: const program = parse('[methyl] = [C]')
-    // TODO: expect(program.definitions.has('methyl')).toBe(true)
-    // TODO: expect(program.errors).toEqual([])
-  })
+describe('DSL Integration', () => {
+  test('complete workflow: parse -> resolve', () => {
+    const source = `
+# Simple definitions
+[methyl] = [C]
+[ethyl] = [C][C]
+[hydroxyl] = [O]
 
-  test('parses multiple definitions', () => {
-    // TODO: const source = '[methyl] = [C]\n[ethyl] = [C][C]'
-    // TODO: const program = parse(source)
-    // TODO: expect(program.definitions.size).toBe(2)
-  })
+# Composition
+[ethanol] = [ethyl][hydroxyl]
+`
+    const program = parse(source)
+    expect(program.errors).toEqual([])
+    expect(program.definitions.size).toBe(4)
 
-  test('ignores comments', () => {
-    // TODO: const source = '# Comment\n[methyl] = [C]'
-    // TODO: const program = parse(source)
-    // TODO: expect(program.definitions.size).toBe(1)
-  })
-
-  // TODO: Error detection
-  test('detects duplicate definitions', () => {
-    // TODO: const source = '[methyl] = [C]\n[methyl] = [C][C]'
-    // TODO: const program = parse(source)
-    // TODO: expect(program.errors.length).toBeGreaterThan(0)
-  })
-
-  test('detects syntax errors', () => {
-    // TODO: const source = '[methyl] [C]'  // missing =
-    // TODO: const program = parse(source)
-    // TODO: expect(program.errors.length).toBeGreaterThan(0)
-  })
-})
-
-describe('resolve', () => {
-  // TODO: Basic resolution
-  test('resolves simple definition', () => {
-    // TODO: const program = parse('[methyl] = [C]')
-    // TODO: expect(resolve(program, 'methyl')).toBe('[C]')
-  })
-
-  test('resolves nested definitions', () => {
-    // TODO: const source = '[methyl] = [C]\n[ethyl] = [methyl][C]\n[ethanol] = [ethyl][O]'
-    // TODO: const program = parse(source)
-    // TODO: expect(resolve(program, 'ethanol')).toBe('[C][C][O]')
+    expect(resolve(program, 'methyl')).toBe('[C]')
+    expect(resolve(program, 'ethyl')).toBe('[C][C]')
+    expect(resolve(program, 'hydroxyl')).toBe('[O]')
+    expect(resolve(program, 'ethanol')).toBe('[C][C][O]')
   })
 
   test('resolves with decode option', () => {
-    // TODO: const program = parse('[ethanol] = [C][C][O]')
-    // TODO: expect(resolve(program, 'ethanol', { decode: true })).toBe('CCO')
+    const source = `
+[methyl] = [C]
+[ethanol] = [methyl][C][O]
+`
+    const program = parse(source)
+    expect(resolve(program, 'ethanol', { decode: true })).toBe('CCO')
   })
 
-  // TODO: Error cases
-  test('throws on undefined name', () => {
-    // TODO: const program = parse('[methyl] = [C]')
-    // TODO: expect(() => resolve(program, 'undefined')).toThrow()
+  test('handles complex molecule definitions', () => {
+    const source = `
+[carbonyl] = [=O]
+[methyl] = [C]
+[acetone] = [methyl][C][carbonyl][methyl]
+`
+    const program = parse(source)
+    expect(resolve(program, 'acetone')).toBe('[C][C][=O][C]')
   })
 
-  test('detects circular dependencies', () => {
-    // TODO: const source = '[a] = [b]\n[b] = [a]'
-    // TODO: const program = parse(source)
-    // TODO: expect(() => resolve(program, 'a')).toThrow()
-  })
-})
-
-describe('resolveAll', () => {
-  // TODO: Resolve all definitions
-  test('resolves all definitions', () => {
-    // TODO: const source = '[methyl] = [C]\n[ethyl] = [methyl][C]'
-    // TODO: const program = parse(source)
-    // TODO: const resolved = resolveAll(program)
-    // TODO: expect(resolved.get('methyl')).toBe('[C]')
-    // TODO: expect(resolved.get('ethyl')).toBe('[C][C]')
-  })
-})
-
-describe('getDependencies', () => {
-  // TODO: Dependency analysis
-  test('gets direct dependencies', () => {
-    // TODO: const source = '[methyl] = [C]\n[ethanol] = [methyl][C][O]'
-    // TODO: const program = parse(source)
-    // TODO: expect(getDependencies(program, 'ethanol')).toContain('methyl')
+  test('resolveAll returns all definitions', () => {
+    const source = `
+[methyl] = [C]
+[ethyl] = [methyl][C]
+[propyl] = [ethyl][C]
+`
+    const program = parse(source)
+    const all = resolveAll(program)
+    expect(all.size).toBe(3)
+    expect(all.get('methyl')).toBe('[C]')
+    expect(all.get('ethyl')).toBe('[C][C]')
+    expect(all.get('propyl')).toBe('[C][C][C]')
   })
 
-  test('returns empty for primitive definitions', () => {
-    // TODO: const program = parse('[methyl] = [C]')
-    // TODO: expect(getDependencies(program, 'methyl')).toEqual([])
-  })
-})
+  test('dependency analysis', () => {
+    const source = `
+[methyl] = [C]
+[ethyl] = [methyl][C]
+[ethanol] = [ethyl][O]
+`
+    const program = parse(source)
 
-describe('getDependents', () => {
-  // TODO: Reverse dependencies
-  test('gets dependents', () => {
-    // TODO: const source = '[methyl] = [C]\n[ethyl] = [methyl][C]\n[ethanol] = [ethyl][O]'
-    // TODO: const program = parse(source)
-    // TODO: const dependents = getDependents(program, 'methyl')
-    // TODO: expect(dependents).toContain('ethyl')
-    // TODO: expect(dependents).toContain('ethanol')
+    expect(getDependencies(program, 'ethanol')).toEqual(['ethyl'])
+    expect(getDependencies(program, 'ethyl')).toEqual(['methyl'])
+    expect(getDependencies(program, 'methyl')).toEqual([])
+
+    const dependents = getDependents(program, 'methyl')
+    expect(dependents).toContain('ethyl')
+    expect(dependents).toContain('ethanol')
+  })
+
+  test('handles branching structures', () => {
+    const source = `
+[methyl] = [C]
+[isobutane] = [C][C][Branch1][C][methyl][methyl]
+`
+    const program = parse(source)
+    expect(resolve(program, 'isobutane')).toBe('[C][C][Branch1][C][C][C]')
+  })
+
+  test('handles ring structures', () => {
+    const source = `
+[benzene] = [C][=C][C][=C][C][=C][Ring1][=Branch1]
+`
+    const program = parse(source)
+    expect(resolve(program, 'benzene')).toBe('[C][=C][C][=C][C][=C][Ring1][=Branch1]')
+  })
+
+  test('empty program', () => {
+    const program = parse('')
+    expect(program.definitions.size).toBe(0)
+    expect(program.errors).toEqual([])
+  })
+
+  test('program with only comments', () => {
+    const program = parse('# Just a comment\n# Another comment')
+    expect(program.definitions.size).toBe(0)
+    expect(program.errors).toEqual([])
+  })
+
+  test('error recovery allows parsing multiple definitions', () => {
+    const source = `
+[valid] = [C]
+[invalid] [C]
+[another_valid] = [N]
+`
+    const program = parse(source)
+    expect(program.definitions.has('valid')).toBe(true)
+    expect(program.definitions.has('another_valid')).toBe(true)
+    expect(program.errors.length).toBeGreaterThan(0)
+  })
+
+  test('real-world example: amino acid fragments', () => {
+    const source = `
+# Basic building blocks
+[amino] = [N]
+[carboxyl] = [C][=O][O]
+[methyl] = [C]
+[ethyl] = [methyl][C]
+
+# Amino acid backbone
+[backbone] = [amino][C][carboxyl]
+
+# Side chains
+[alanine_side] = [methyl]
+[valine_side] = [ethyl][Branch1][C][methyl][methyl]
+
+# Complete amino acids
+[alanine] = [amino][C][Branch1][C][alanine_side][carboxyl]
+`
+    const program = parse(source)
+    expect(program.errors).toEqual([])
+
+    const alanine = resolve(program, 'alanine')
+    expect(alanine).toBe('[N][C][Branch1][C][C][C][=O][O]')
   })
 })

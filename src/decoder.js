@@ -153,7 +153,13 @@ export function decodeToAST(selfies) {
     }
 
     // Regular atom symbols
-    const atomInfo = parseAtomSymbol(content)
+    let atomInfo
+    try {
+      atomInfo = parseAtomSymbol(content)
+    } catch (error) {
+      throw new Error(`Invalid SELFIES token ${token}: ${error.message}`)
+    }
+
     if (atomInfo) {
       const { element, bondOrder: requestedBond, stereo } = atomInfo
       const capacity = getBondingCapacity(element)
@@ -330,7 +336,13 @@ export function handleRingClosure(targetIndex, prevAtomIndex, bondOrder, bonds, 
  * @returns {Object} { consumed, state, prevAtomIndex } - tokens consumed, new state, and atom index
  */
 export function processAtomToken(content, state, prevAtomIndex, atoms, bonds) {
-  const atomInfo = parseAtomSymbol(content)
+  let atomInfo
+  try {
+    atomInfo = parseAtomSymbol(content)
+  } catch (error) {
+    throw new Error(`Invalid atom token [${content}]: ${error.message}`)
+  }
+
   if (!atomInfo) {
     return { consumed: 1, state, prevAtomIndex }
   }
@@ -414,7 +426,13 @@ export function deriveBranch(tokens, startIndex, maxDerive, initState, rootAtom,
       continue
     }
 
-    const atomInfo = parseAtomSymbol(content)
+    let atomInfo
+    try {
+      atomInfo = parseAtomSymbol(content)
+    } catch (error) {
+      throw new Error(`Invalid branch atom [${content}]: ${error.message}`)
+    }
+
     if (!atomInfo) {
       consumed++
       continue
@@ -476,9 +494,12 @@ export function parseAtomSymbol(content) {
   }
 
   // Check if it's a valid element
-  const validElements = ['C', 'N', 'O', 'S', 'P', 'F', 'Cl', 'Br', 'I', 'B', 'H']
+  const validElements = ['C', 'N', 'O', 'S', 'P', 'F', 'Cl', 'Br', 'I', 'B', 'H',
+                         'Si', 'As', 'Se', 'Te', 'Al', 'Ga', 'Ge', 'Sn', 'Pb',
+                         'Li', 'Na', 'K', 'Mg', 'Ca', 'Zn', 'Fe', 'Cu', 'Ni', 'Co',
+                         'Mn', 'Cr', 'V', 'Ti', 'Sc']
   if (!validElements.includes(element)) {
-    return null
+    throw new Error(`Invalid element: ${element}`)
   }
 
   return { element, bondOrder, stereo }

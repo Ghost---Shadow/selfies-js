@@ -1,0 +1,21 @@
+# Undefined references
+# References to names that are never defined
+# Should produce errors when trying to resolve
+
+# Valid definition
+[methyl] = [C]
+
+# Uses undefined reference
+[compound1] = [methyl][undefined_group]
+
+# Another undefined reference
+[compound2] = [mystery][C][O]
+
+# Multiple undefined references
+[compound3] = [unknown1][unknown2][unknown3]
+
+# Valid definition
+[ethyl] = [C][C]
+
+# Mix of valid and invalid
+[compound4] = [methyl][ethyl][missing_part]

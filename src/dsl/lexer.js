@@ -148,21 +148,3 @@ export function lex(source) {
 
   return tokens
 }
-
-/**
- * Helper: Determines if character is start of identifier
- * @param {string} char - Character to check
- * @returns {boolean} True if valid identifier start
- */
-function isIdentifierStart(char) {
-  return /[a-zA-Z_]/.test(char)
-}
-
-/**
- * Helper: Determines if character can be in identifier
- * @param {string} char - Character to check
- * @returns {boolean} True if valid identifier character
- */
-function isIdentifierChar(char) {
-  return /[a-zA-Z0-9_-]/.test(char)
-}

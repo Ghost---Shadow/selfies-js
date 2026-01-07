@@ -1,11 +1,18 @@
-# Circular dependency test case
-# This should generate an error
-# a depends on b, b depends on a
+# Circular dependency examples
+# These definitions reference each other in a cycle
+# Should produce errors
 
+# Simple cycle
 [a] = [b]
 [b] = [a]
 
-# Another cycle
+# Self-reference
+[recursive] = [recursive]
+
+# Longer cycle
 [x] = [y]
 [y] = [z]
 [z] = [x]
+
+# Valid definition that doesn't participate in cycle
+[valid] = [C][C][O]

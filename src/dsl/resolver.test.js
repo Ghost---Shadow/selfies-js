@@ -1,7 +1,5 @@
 /**
- * Tests for DSL resolver
- *
- * Note: Also see dsl.test.js for integration tests
+ * Tests for resolver
  */
 
 import { describe, test, expect } from 'bun:test'
@@ -9,79 +7,93 @@ import { parse } from './parser.js'
 import { resolve, resolveAll } from './resolver.js'
 
 describe('resolve', () => {
-  // TODO: Basic resolution
-  test('resolves primitive definition', () => {
-    // TODO: const program = parse('[methyl] = [C]')
-    // TODO: expect(resolve(program, 'methyl')).toBe('[C]')
+  test('resolves simple definition', () => {
+    const program = parse('[methyl] = [C]')
+    expect(resolve(program, 'methyl')).toBe('[C]')
   })
 
-  test('resolves nested reference', () => {
-    // TODO: const source = '[methyl] = [C]\n[ethyl] = [methyl][C]'
-    // TODO: const program = parse(source)
-    // TODO: expect(resolve(program, 'ethyl')).toBe('[C][C]')
+  test('resolves nested definitions', () => {
+    const source = '[methyl] = [C]\n[ethyl] = [methyl][C]\n[ethanol] = [ethyl][O]'
+    const program = parse(source)
+    expect(resolve(program, 'ethanol')).toBe('[C][C][O]')
   })
 
-  test('resolves deeply nested', () => {
-    // TODO: const source = '[a] = [C]\n[b] = [a][N]\n[c] = [b][O]'
-    // TODO: const program = parse(source)
-    // TODO: expect(resolve(program, 'c')).toBe('[C][N][O]')
-  })
-})
-
-describe('resolve - options', () => {
-  // TODO: Decode option
-  test('decodes to SMILES when decode=true', () => {
-    // TODO: const program = parse('[ethanol] = [C][C][O]')
-    // TODO: const result = resolve(program, 'ethanol', { decode: true })
-    // TODO: expect(result).toBe('CCO')
+  test('resolves with decode option', () => {
+    const program = parse('[ethanol] = [C][C][O]')
+    expect(resolve(program, 'ethanol', { decode: true })).toBe('CCO')
   })
 
-  test('returns SELFIES by default', () => {
-    // TODO: const program = parse('[ethanol] = [C][C][O]')
-    // TODO: const result = resolve(program, 'ethanol')
-    // TODO: expect(result).toBe('[C][C][O]')
+  test('handles multiple references in one definition', () => {
+    const source = '[methyl] = [C]\n[ethyl] = [methyl][methyl]'
+    const program = parse(source)
+    expect(resolve(program, 'ethyl')).toBe('[C][C]')
   })
-})
 
-describe('resolve - errors', () => {
-  // TODO: Error handling
+  test('handles deeply nested references', () => {
+    const source = '[a] = [C]\n[b] = [a][a]\n[c] = [b][b]\n[d] = [c][c]'
+    const program = parse(source)
+    expect(resolve(program, 'd')).toBe('[C][C][C][C][C][C][C][C]')
+  })
+
   test('throws on undefined name', () => {
-    // TODO: const program = parse('[methyl] = [C]')
-    // TODO: expect(() => resolve(program, 'undefined')).toThrow()
+    const program = parse('[methyl] = [C]')
+    expect(() => resolve(program, 'undefined')).toThrow(/Undefined definition/)
   })
 
-  test('detects circular reference', () => {
-    // TODO: const source = '[a] = [b]\n[b] = [a]'
-    // TODO: const program = parse(source)
-    // TODO: expect(() => resolve(program, 'a')).toThrow()
+  test('detects circular dependencies', () => {
+    const source = '[a] = [b]\n[b] = [a]'
+    const program = parse(source)
+    expect(() => resolve(program, 'a')).toThrow(/Circular dependency/)
   })
 
-  test('detects self-reference', () => {
-    // TODO: const program = parse('[a] = [a]')
-    // TODO: expect(() => resolve(program, 'a')).toThrow()
+  test('detects self-referential definitions', () => {
+    const source = '[a] = [a]'
+    const program = parse(source)
+    expect(() => resolve(program, 'a')).toThrow(/Circular dependency/)
+  })
+
+  test('detects indirect circular dependencies', () => {
+    const source = '[a] = [b]\n[b] = [c]\n[c] = [a]'
+    const program = parse(source)
+    expect(() => resolve(program, 'a')).toThrow(/Circular dependency/)
+  })
+
+  test('resolves mixed primitive and reference tokens', () => {
+    const source = '[methyl] = [C]\n[ethanol] = [methyl][C][O]'
+    const program = parse(source)
+    expect(resolve(program, 'ethanol')).toBe('[C][C][O]')
   })
 })
 
 describe('resolveAll', () => {
-  // TODO: Resolve all definitions
   test('resolves all definitions', () => {
-    // TODO: const source = '[methyl] = [C]\n[ethyl] = [methyl][C]'
-    // TODO: const program = parse(source)
-    // TODO: const resolved = resolveAll(program)
-    // TODO: expect(resolved.size).toBe(2)
-    // TODO: expect(resolved.get('methyl')).toBe('[C]')
-    // TODO: expect(resolved.get('ethyl')).toBe('[C][C]')
+    const source = '[methyl] = [C]\n[ethyl] = [methyl][C]'
+    const program = parse(source)
+    const resolved = resolveAll(program)
+    expect(resolved.get('methyl')).toBe('[C]')
+    expect(resolved.get('ethyl')).toBe('[C][C]')
   })
 
-  test('returns Map', () => {
-    // TODO: const program = parse('[methyl] = [C]')
-    // TODO: const resolved = resolveAll(program)
-    // TODO: expect(resolved instanceof Map).toBe(true)
+  test('skips definitions with circular dependencies', () => {
+    const source = '[a] = [C]\n[b] = [c]\n[c] = [b]'
+    const program = parse(source)
+    const resolved = resolveAll(program)
+    expect(resolved.get('a')).toBe('[C]')
+    expect(resolved.has('b')).toBe(false)
+    expect(resolved.has('c')).toBe(false)
   })
 
-  test('supports decode option', () => {
-    // TODO: const program = parse('[ethanol] = [C][C][O]')
-    // TODO: const resolved = resolveAll(program, { decode: true })
-    // TODO: expect(resolved.get('ethanol')).toBe('CCO')
+  test('resolves all with decode option', () => {
+    const source = '[methyl] = [C]\n[ethyl] = [methyl][C]'
+    const program = parse(source)
+    const resolved = resolveAll(program, { decode: true })
+    expect(resolved.get('methyl')).toBe('C')
+    expect(resolved.get('ethyl')).toBe('CC')
+  })
+
+  test('returns empty map for empty program', () => {
+    const program = parse('')
+    const resolved = resolveAll(program)
+    expect(resolved.size).toBe(0)
   })
 })

@@ -1,8 +1,21 @@
-# Simple DSL test case
-# Basic definitions with no dependencies
+# Simple molecule definitions
+# This file demonstrates basic DSL syntax
 
 [methyl] = [C]
 [ethyl] = [C][C]
 [propyl] = [C][C][C]
+[butyl] = [C][C][C][C]
+
+# Functional groups
 [hydroxyl] = [O]
+[carbonyl] = [=O]
 [amino] = [N]
+[carboxyl] = [C][=O][O]
+
+# Simple alcohols
+[methanol] = [methyl][hydroxyl]
+[ethanol] = [ethyl][hydroxyl]
+[propanol] = [propyl][hydroxyl]
+
+# Ketones
+[acetone] = [methyl][C][carbonyl][methyl]

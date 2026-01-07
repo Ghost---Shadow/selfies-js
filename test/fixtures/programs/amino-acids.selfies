@@ -1,0 +1,29 @@
+# Amino acid building blocks
+# Demonstrates hierarchical composition
+
+# Basic atoms and bonds
+[C_single] = [C]
+[N_single] = [N]
+[O_single] = [O]
+[double_bond_O] = [=O]
+[S_single] = [S]
+
+# Common groups
+[methyl] = [C_single]
+[ethyl] = [C_single][C_single]
+[carboxyl] = [C_single][double_bond_O][O_single]
+[amino] = [N_single]
+
+# Amino acid backbone
+[backbone] = [amino][C_single][carboxyl]
+
+# Side chains for different amino acids
+[glycine_side] = [C_single]
+[alanine_side] = [methyl]
+[valine_side] = [C_single][Branch1][C_single][methyl][methyl]
+[leucine_side] = [C_single][C_single][Branch1][C_single][methyl][methyl]
+[cysteine_side] = [C_single][S_single]
+
+# Complete amino acids with side chains
+[glycine] = [amino][glycine_side][carboxyl]
+[alanine] = [amino][C_single][Branch1][C_single][alanine_side][carboxyl]

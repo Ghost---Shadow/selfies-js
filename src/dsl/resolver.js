@@ -6,7 +6,17 @@
  */
 
 import { decode } from '../decoder.js'
-import { ResolveError } from '../errors.js'
+
+/**
+ * Custom error for resolution failures
+ */
+export class ResolveError extends Error {
+  constructor(message, name) {
+    super(message)
+    this.name = 'ResolveError'
+    this.definitionName = name
+  }
+}
 
 /**
  * Resolves a definition name to its primitive SELFIES string

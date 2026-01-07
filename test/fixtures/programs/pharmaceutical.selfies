@@ -1,0 +1,34 @@
+# Real-world pharmaceutical building blocks
+
+# Basic aromatics
+[phenyl] = [C][=C][C][=C][C][=C][Ring1][=Branch1]
+[benzyl] = [C][phenyl]
+
+# Functional groups
+[hydroxyl] = [O]
+[carbonyl] = [=O]
+[amino] = [N]
+[methoxy] = [O][C]
+[nitro] = [N][=Branch1][C][=O][=O]
+
+# Common substituents
+[methyl] = [C]
+[ethyl] = [C][C]
+[isopropyl] = [C][Branch1][C][methyl][methyl]
+[tert_butyl] = [C][Branch1][C][methyl][Branch1][C][methyl][methyl]
+
+# Heterocycles
+[pyridine] = [N][=C][C][=C][C][=C][Ring1][Branch1]
+[furan] = [O][C][=C][C][=C][Ring1][Branch1]
+[thiophene] = [S][C][=C][C][=C][Ring1][Branch1]
+
+# pharmaceutical-like fragments
+[phenol] = [phenyl][hydroxyl]
+[aniline] = [phenyl][amino]
+[anisole] = [phenyl][methoxy]
+[acetophenone] = [phenyl][C][carbonyl][methyl]
+[benzamide] = [phenyl][C][carbonyl][amino]
+
+# Aspirin-like structure (simplified)
+[salicylic_acid] = [phenyl][hydroxyl][C][carbonyl][hydroxyl]
+[acetyl_group] = [C][carbonyl][methyl]

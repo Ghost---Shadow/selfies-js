@@ -173,8 +173,8 @@ describe('Chemistry Validation', () => {
       expect(result.error).toBe(null)
     })
 
-    test.skip('returns error details for invalid SELFIES', async () => {
-      // TODO: Decoder doesn't validate element names yet
+    test('returns error details for invalid SELFIES', async () => {
+      // Test that decoder validates element names
       const result = await getValidationDetails('[Xyz]')
       expect(result.isValid).toBe(false)
       expect(result.error).not.toBe(null)
@@ -205,8 +205,8 @@ describe('Chemistry Validation', () => {
       expect(results.failures).toEqual([])
     })
 
-    test.skip('identifies invalid molecules in batch', async () => {
-      // TODO: Decoder doesn't validate element names yet
+    test('identifies invalid molecules in batch', async () => {
+      // Test batch validation with invalid element
       const batch = [
         '[C]',
         '[Xyz]', // invalid

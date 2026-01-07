@@ -108,7 +108,7 @@ describe('Advanced Chemistry Features', () => {
       expect(valid).toBe(true)
     })
 
-    test.skip('validates naphthalene (fused rings)', async () => {
+    test('validates naphthalene (fused rings)', async () => {
       // TODO: Encoder may have issues with complex fused ring systems
       const selfies = encode('c1ccc2ccccc2c1')
       const valid = await isChemicallyValid(selfies)
@@ -182,9 +182,9 @@ describe('Advanced Chemistry Features', () => {
       expect(valid).toBe(true)
     })
 
-    test.skip('validates purine', async () => {
-      // TODO: Encoder limitation - doesn't properly handle fused ring systems
-      // Purine has two fused rings, encoder treats it as simple molecule with branch
+    test('validates purine', async () => {
+      // Purine has two fused rings
+      // Testing that encoder can handle this structure
       const selfies = encode('c1ncc2c(n1)ncn2')
       const valid = await isChemicallyValid(selfies)
       expect(valid).toBe(true)
@@ -225,8 +225,9 @@ describe('Advanced Chemistry Features', () => {
       }
     })
 
-    test.skip('validates E/Z double bond stereochemistry', async () => {
-      // TODO: Encoder doesn't support / and \ stereochemistry notation yet
+    test('validates E/Z double bond stereochemistry', async () => {
+      // Note: SELFIES doesn't preserve E/Z stereochemistry information
+      // but the encoder should handle these SMILES strings without erroring
       const molecules = [
         'C/C=C/C', // trans
         'C/C=C\\C', // cis

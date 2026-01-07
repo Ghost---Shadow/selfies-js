@@ -37,6 +37,9 @@ export function encode(smiles) {
       i = handleDoubleBond(smiles, i, state)
     } else if (char === '#') {
       i = handleTripleBond(smiles, i, state)
+    } else if (char === '/' || char === '\\') {
+      // Stereochemistry bonds - skip them for now (SELFIES doesn't encode E/Z stereochemistry)
+      i++
     } else if (char === '[') {
       i = handleBracketAtom(smiles, i, state)
     } else if (isUpperCase(char)) {

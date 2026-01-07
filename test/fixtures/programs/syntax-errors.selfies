@@ -1,0 +1,24 @@
+# File with intentional syntax errors
+# Should produce multiple error diagnostics
+
+# Valid definition
+[methyl] = [C]
+
+# Missing equals sign
+[ethyl] [C][C]
+
+# Missing tokens after equals
+[propyl] =
+
+# Duplicate definition
+[butyl] = [C][C][C][C]
+[butyl] = [C][C][C][C]
+
+# Unclosed bracket (lexer error)
+[pentyl = [C][C][C][C][C]
+
+# Unexpected character (lexer error)
+[hexyl] = [C]@[C][C][C][C][C]
+
+# Another valid definition
+[valid] = [C][O]
