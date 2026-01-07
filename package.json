@@ -4,8 +4,13 @@
   "description": "Pure JavaScript SELFIES encoder/decoder",
   "type": "module",
   "main": "src/index.js",
+  "bin": {
+    "selfies-js": "./src/cli.js"
+  },
   "exports": {
-    ".": "./src/index.js"
+    ".": "./src/index.js",
+    "./dsl": "./src/dsl/index.js",
+    "./syntax": "./src/syntax.js"
   },
   "scripts": {
     "test": "bun test",
@@ -20,7 +25,10 @@
   ],
   "author": "",
   "license": "MIT",
-  "dependencies": {
+  "peerDependencies": {
+    "@rdkit/rdkit": "^2025.3.4-1.0.0"
+  },
+  "devDependencies": {
     "@rdkit/rdkit": "^2025.3.4-1.0.0"
   }
 }

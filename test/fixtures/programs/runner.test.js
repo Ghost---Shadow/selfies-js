@@ -9,7 +9,7 @@ import { join, dirname } from 'path'
 import { fileURLToPath } from 'url'
 import { parse } from '../../../src/dsl/parser.js'
 import { resolve, resolveAll } from '../../../src/dsl/resolver.js'
-import { detectCycles, detectForwardReferences, findUnused } from '../../../src/dsl/analyzer.js'
+import { detectCycles, findUnused } from '../../../src/dsl/analyzer.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const PROGRAMS_DIR = __dirname
@@ -47,33 +47,6 @@ describe('Fixture Programs', () => {
 
       expect(resolve(program, 'methanol', { decode: true })).toBe('CO')
       expect(resolve(program, 'ethanol', { decode: true })).toBe('CCO')
-    })
-  })
-
-  describe('forward-ref.selfies', () => {
-    test('should parse without errors', () => {
-      const source = readProgram('forward-ref.selfies')
-      const program = parse(source)
-
-      expect(program.errors).toEqual([])
-    })
-
-    test('should detect forward references', () => {
-      const source = readProgram('forward-ref.selfies')
-      const program = parse(source)
-      const forward = detectForwardReferences(program)
-
-      expect(forward.length).toBeGreaterThan(0)
-      expect(forward.some(f => f.message.includes('ethyl'))).toBe(true)
-      expect(forward.some(f => f.message.includes('hydroxyl'))).toBe(true)
-    })
-
-    test('should still resolve despite forward references', () => {
-      const source = readProgram('forward-ref.selfies')
-      const program = parse(source)
-
-      expect(resolve(program, 'alcohol')).toBe('[C][C][O]')
-      expect(resolve(program, 'longer_alcohol')).toBe('[C][C][C][O]')
     })
   })
 

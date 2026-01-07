@@ -6,6 +6,7 @@
  */
 
 import { decode } from '../decoder.js'
+import { validateValence } from './valenceValidator.js'
 
 /**
  * Custom error for resolution failures
@@ -24,6 +25,7 @@ export class ResolveError extends Error {
  * @param {string} name - Name to resolve
  * @param {Object} options - Resolution options
  * @param {boolean} options.decode - If true, return SMILES instead of SELFIES
+ * @param {boolean} options.validateValence - If true, validate chemical valence (default: true)
  * @returns {string} Resolved SELFIES (or SMILES if decode option is true)
  * @throws {ResolveError} If name is not defined or circular reference detected
  *
@@ -44,6 +46,14 @@ export function resolve(program, name, options = {}) {
 
   // Join tokens to form SELFIES string
   const selfies = resolved.join('')
+
+  // Validate valence if requested (default: true)
+  if (options.validateValence !== false) {
+    const valenceErrors = validateValence(selfies, name)
+    if (valenceErrors.length > 0) {
+      throw new ResolveError(valenceErrors[0].message, name)
+    }
+  }
 
   // Optionally decode to SMILES
   if (options.decode) {

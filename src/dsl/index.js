@@ -12,7 +12,6 @@ export {
   getDependencies,
   getDependents,
   detectCycles,
-  detectForwardReferences,
   findUnused
 } from './analyzer.js'
 export {
@@ -22,3 +21,12 @@ export {
   has,
   getNames
 } from './symbolTable.js'
+export {
+  validateValence,
+  validateProgramValence
+} from './valenceValidator.js'
+export {
+  parseImports,
+  loadWithImports,
+  loadFile
+} from './importer.js'

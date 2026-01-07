@@ -141,42 +141,6 @@ export function detectCycles(program) {
 }
 
 /**
- * Detects forward references (using a name before it's defined)
- * @param {Object} program - Program object
- * @returns {Object[]} Array of forward reference diagnostics
- */
-export function detectForwardReferences(program) {
-  const diagnostics = []
-  const definedNames = new Set()
-
-  // Convert definitions to array to maintain order
-  const defArray = Array.from(program.definitions.entries())
-
-  for (const [name, definition] of defArray) {
-    // Check each token in this definition
-    for (const token of definition.tokens) {
-      const tokenName = token.slice(1, -1)
-
-      // If it's a reference to another definition that hasn't been defined yet
-      if (program.definitions.has(tokenName) && !definedNames.has(tokenName)) {
-        diagnostics.push({
-          message: `Forward reference to '${tokenName}' before it is defined`,
-          severity: 'warning',
-          line: definition.line,
-          column: 1,
-          range: definition.range
-        })
-      }
-    }
-
-    // Mark this name as defined
-    definedNames.add(name)
-  }
-
-  return diagnostics
-}
-
-/**
  * Finds unused definitions (not referenced by any other definition)
  * @param {Object} program - Program object
  * @returns {string[]} Array of unused definition names

@@ -4,7 +4,7 @@
 
 import { describe, test, expect } from 'bun:test'
 import { parse } from './parser.js'
-import { getDependencies, getDependents, detectCycles, detectForwardReferences, findUnused } from './analyzer.js'
+import { getDependencies, getDependents, detectCycles, findUnused } from './analyzer.js'
 
 describe('getDependencies', () => {
   test('gets direct dependencies', () => {
@@ -106,36 +106,6 @@ describe('detectCycles', () => {
     const cycles = detectCycles(program)
     expect(cycles[0]).toMatchObject({
       severity: 'error',
-      line: expect.any(Number),
-      column: expect.any(Number),
-      range: expect.any(Array)
-    })
-  })
-})
-
-describe('detectForwardReferences', () => {
-  test('detects forward reference', () => {
-    const source = '[ethanol] = [methyl][C][O]\n[methyl] = [C]'
-    const program = parse(source)
-    const forward = detectForwardReferences(program)
-    expect(forward.length).toBeGreaterThan(0)
-    expect(forward[0].message).toContain('Forward reference')
-    expect(forward[0].message).toContain('methyl')
-  })
-
-  test('returns empty for backward references', () => {
-    const source = '[methyl] = [C]\n[ethanol] = [methyl][C][O]'
-    const program = parse(source)
-    const forward = detectForwardReferences(program)
-    expect(forward).toEqual([])
-  })
-
-  test('diagnostics include severity and location', () => {
-    const source = '[ethanol] = [methyl][C][O]\n[methyl] = [C]'
-    const program = parse(source)
-    const forward = detectForwardReferences(program)
-    expect(forward[0]).toMatchObject({
-      severity: 'warning',
       line: expect.any(Number),
       column: expect.any(Number),
       range: expect.any(Array)

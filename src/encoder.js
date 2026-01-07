@@ -38,8 +38,7 @@ export function encode(smiles) {
     } else if (char === '#') {
       i = handleTripleBond(smiles, i, state)
     } else if (char === '/' || char === '\\') {
-      // Stereochemistry bonds - skip them for now (SELFIES doesn't encode E/Z stereochemistry)
-      i++
+      i = handleStereoBond(smiles, i, state)
     } else if (char === '[') {
       i = handleBracketAtom(smiles, i, state)
     } else if (isUpperCase(char)) {
@@ -73,7 +72,8 @@ function createEncoderState() {
   return {
     tokens: [],
     ringClosures: new Map(),
-    aromaticCounter: 0
+    aromaticCounter: 0,
+    pendingStereoBond: null  // Tracks / or \ for next bond
   }
 }
 
@@ -114,7 +114,14 @@ function closeRing(ringNum, state) {
   const ringStartPos = state.ringClosures.get(ringNum)
   const atomsInBetween = state.tokens.length - ringStartPos - 1
 
-  state.tokens.push('[Ring1]')
+  // Add ring token with stereochemistry if present
+  if (state.pendingStereoBond) {
+    state.tokens.push(`[${state.pendingStereoBond}Ring1]`)
+    state.pendingStereoBond = null
+  } else {
+    state.tokens.push('[Ring1]')
+  }
+
   // For decoder formula: targetIndex = prevAtomIndex - (Q.value + 1)
   // We want: Q.value + 1 = atomsInBetween, so Q.value = atomsInBetween - 1
   state.tokens.push(getLengthToken(atomsInBetween - 1))
@@ -189,6 +196,22 @@ function handleDoubleBond(smiles, index, state) {
  */
 function handleTripleBond(smiles, index, state) {
   return handleBondedAtom(smiles, index, state, '#')
+}
+
+/**
+ * Handles stereochemistry bond notation (/ and \)
+ * @param {string} smiles - SMILES string
+ * @param {number} index - Current position
+ * @param {Object} state - Encoder state
+ * @returns {number} New position
+ */
+function handleStereoBond(smiles, index, state) {
+  const stereoChar = smiles[index]
+
+  // Store the stereochemistry marker to be used with the next ring closure
+  state.pendingStereoBond = stereoChar === '/' ? '-/' : '\\/'
+
+  return index + 1
 }
 
 /**

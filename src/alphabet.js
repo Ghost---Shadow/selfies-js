@@ -113,6 +113,10 @@ function buildStructuralTokens() {
   tokens.push('[=Branch1]', '[=Branch2]', '[=Branch3]')
   tokens.push('[#Branch1]', '[#Branch2]', '[#Branch3]')
 
+  // Stereochemistry ring tokens
+  tokens.push('[-/Ring1]', '[-/Ring2]', '[-/Ring3]')
+  tokens.push('[\\\\/Ring1]', '[\\\\/Ring2]', '[\\\\/Ring3]')
+
   return tokens
 }
 
