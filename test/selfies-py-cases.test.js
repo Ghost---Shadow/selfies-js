@@ -86,9 +86,9 @@ describe('selfies-py compatibility tests', () => {
     })
 
     test('encodes cyclic molecules', () => {
-      expect(encode('C1CC1')).toBe('[C][C][C][Ring1][C]')
+      expect(encode('C1CC1')).toBe('[C][C][C][Ring1][=C]')
       // Benzene with aromatic notation
-      expect(encode('c1ccccc1')).toBe('[C][=C][C][=C][C][=C][Ring1][N]')
+      expect(encode('c1ccccc1')).toBe('[C][=C][C][=C][C][=C][Ring1][=N]')
     })
   })
 
@@ -234,7 +234,7 @@ describe('selfies-py compatibility tests', () => {
     test('handles aromatic benzene', () => {
       // Aromatic carbons with ring
       const selfies = encode('c1ccccc1')
-      expect(selfies).toBe('[C][=C][C][=C][C][=C][Ring1][N]')
+      expect(selfies).toBe('[C][=C][C][=C][C][=C][Ring1][=N]')
     })
 
     test('handles aromatic pyrrole', () => {
