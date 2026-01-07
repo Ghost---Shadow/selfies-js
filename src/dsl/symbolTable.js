@@ -9,8 +9,7 @@
  * @returns {Map<string, Object>} Empty symbol table
  */
 export function createSymbolTable() {
-  // TODO: Return new Map
-  throw new Error('Not implemented')
+  return new Map()
 }
 
 /**
@@ -21,9 +20,10 @@ export function createSymbolTable() {
  * @throws {Error} If name already exists
  */
 export function addDefinition(symbolTable, name, definition) {
-  // TODO: Add definition to symbol table
-  // Check for duplicates and throw error if exists
-  throw new Error('Not implemented')
+  if (symbolTable.has(name)) {
+    throw new Error(`Definition '${name}' already exists`)
+  }
+  symbolTable.set(name, definition)
 }
 
 /**
@@ -33,8 +33,7 @@ export function addDefinition(symbolTable, name, definition) {
  * @returns {Object|undefined} Definition if found, undefined otherwise
  */
 export function lookup(symbolTable, name) {
-  // TODO: Look up name in symbol table
-  throw new Error('Not implemented')
+  return symbolTable.get(name)
 }
 
 /**
@@ -44,8 +43,7 @@ export function lookup(symbolTable, name) {
  * @returns {boolean} True if name exists
  */
 export function has(symbolTable, name) {
-  // TODO: Check if name exists in symbol table
-  throw new Error('Not implemented')
+  return symbolTable.has(name)
 }
 
 /**
@@ -54,6 +52,5 @@ export function has(symbolTable, name) {
  * @returns {string[]} Array of definition names
  */
 export function getNames(symbolTable) {
-  // TODO: Return array of all names in symbol table
-  throw new Error('Not implemented')
+  return Array.from(symbolTable.keys())
 }

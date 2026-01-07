@@ -6,6 +6,7 @@
  */
 
 import { decode } from '../decoder.js'
+import { ResolveError } from '../errors.js'
 
 /**
  * Resolves a definition name to its primitive SELFIES string
@@ -22,19 +23,24 @@ import { decode } from '../decoder.js'
  *   resolve(program, 'ethanol', { decode: true }) // => 'CCO'
  */
 export function resolve(program, name, options = {}) {
-  // TODO: Implement resolution
-  // Algorithm:
-  // 1. Look up name in program.definitions
-  // 2. Get tokens from definition
-  // 3. For each token:
-  //    - If it's a reference ([name]), recursively resolve it
-  //    - If it's a primitive token, keep it
-  // 4. Join resolved tokens
-  // 5. If options.decode is true, decode to SMILES
-  // 6. Return result
-  //
-  // Need to track visited names to detect cycles
-  throw new Error('Not implemented')
+  // Look up the definition
+  if (!program.definitions.has(name)) {
+    throw new ResolveError(`Undefined definition: ${name}`, name)
+  }
+
+  // Resolve recursively with cycle detection
+  const visiting = new Set()
+  const resolved = resolveRecursive(program, name, visiting)
+
+  // Join tokens to form SELFIES string
+  const selfies = resolved.join('')
+
+  // Optionally decode to SMILES
+  if (options.decode) {
+    return decode(selfies)
+  }
+
+  return selfies
 }
 
 /**
@@ -44,9 +50,18 @@ export function resolve(program, name, options = {}) {
  * @returns {Map<string, string>} Map of name to resolved SELFIES
  */
 export function resolveAll(program, options = {}) {
-  // TODO: Resolve all definitions
-  // Iterate through program.definitions and resolve each one
-  throw new Error('Not implemented')
+  const resolved = new Map()
+
+  for (const [name, definition] of program.definitions) {
+    try {
+      resolved.set(name, resolve(program, name, options))
+    } catch (error) {
+      // Skip definitions that can't be resolved (e.g., circular dependencies)
+      // The error will be caught when trying to resolve individually
+    }
+  }
+
+  return resolved
 }
 
 /**
@@ -57,14 +72,35 @@ export function resolveAll(program, options = {}) {
  * @returns {string[]} Resolved primitive tokens
  */
 function resolveRecursive(program, name, visiting = new Set()) {
-  // TODO: Implement recursive resolution with cycle detection
-  // 1. Check if name is in visiting set (cycle detected)
-  // 2. Add name to visiting set
-  // 3. Get definition
-  // 4. Resolve each token in definition
-  // 5. Remove name from visiting set
-  // 6. Return resolved tokens
-  throw new Error('Not implemented')
+  // Check for circular dependency
+  if (visiting.has(name)) {
+    throw new ResolveError(`Circular dependency detected involving '${name}'`, name)
+  }
+
+  // Mark as visiting
+  visiting.add(name)
+
+  // Get definition
+  const definition = program.definitions.get(name)
+  const resolvedTokens = []
+
+  // Resolve each token
+  for (const token of definition.tokens) {
+    if (isReference(token, program)) {
+      // It's a reference to another definition - resolve it recursively
+      const refName = token.slice(1, -1) // Remove brackets
+      const refResolved = resolveRecursive(program, refName, visiting)
+      resolvedTokens.push(...refResolved)
+    } else {
+      // It's a primitive token - keep it as is
+      resolvedTokens.push(token)
+    }
+  }
+
+  // Unmark as visiting
+  visiting.delete(name)
+
+  return resolvedTokens
 }
 
 /**
@@ -74,6 +110,7 @@ function resolveRecursive(program, name, visiting = new Set()) {
  * @returns {boolean} True if token is a defined name
  */
 function isReference(token, program) {
-  // TODO: Check if token (stripped of brackets) is a defined name
-  throw new Error('Not implemented')
+  // Strip brackets and check if it's a defined name
+  const name = token.slice(1, -1)
+  return program.definitions.has(name)
 }

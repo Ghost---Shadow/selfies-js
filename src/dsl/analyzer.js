@@ -18,12 +18,22 @@
  *   getDependencies(program, 'methyl') // => []
  */
 export function getDependencies(program, name) {
-  // TODO: Implement dependency extraction
-  // Algorithm:
-  // 1. Get definition for name
-  // 2. Scan tokens for references to other definitions
-  // 3. Return array of referenced names
-  throw new Error('Not implemented')
+  const definition = program.definitions.get(name)
+  if (!definition) {
+    return []
+  }
+
+  const dependencies = []
+  for (const token of definition.tokens) {
+    const tokenName = token.slice(1, -1) // Remove brackets
+    if (program.definitions.has(tokenName)) {
+      if (!dependencies.includes(tokenName)) {
+        dependencies.push(tokenName)
+      }
+    }
+  }
+
+  return dependencies
 }
 
 /**
@@ -39,12 +49,27 @@ export function getDependencies(program, name) {
  *   getDependents(program, 'methyl') // => ['ethyl', 'ethanol']
  */
 export function getDependents(program, name) {
-  // TODO: Implement dependent search
-  // Algorithm:
-  // 1. Iterate through all definitions
-  // 2. Check if each definition depends on target name
-  // 3. Return array of names that depend on target
-  throw new Error('Not implemented')
+  const dependents = []
+
+  // Build a set of all transitive dependents
+  const visited = new Set()
+
+  function findDirectDependents(targetName) {
+    for (const [defName, definition] of program.definitions) {
+      if (visited.has(defName)) continue
+
+      const deps = getDependencies(program, defName)
+      if (deps.includes(targetName)) {
+        visited.add(defName)
+        dependents.push(defName)
+        // Recursively find dependents of this dependent
+        findDirectDependents(defName)
+      }
+    }
+  }
+
+  findDirectDependents(name)
+  return dependents
 }
 
 /**
@@ -61,13 +86,58 @@ export function getDependents(program, name) {
  * }
  */
 export function detectCycles(program) {
-  // TODO: Implement cycle detection
-  // Algorithm:
-  // 1. Build dependency graph
-  // 2. DFS with visiting set to detect back edges
-  // 3. When cycle found, trace back to find cycle path
-  // 4. Create diagnostic for each cycle
-  throw new Error('Not implemented')
+  const diagnostics = []
+  const visited = new Set()
+  const visiting = new Set()
+  const cyclesFound = new Set()
+
+  function dfs(name, path = []) {
+    if (visiting.has(name)) {
+      // Found a cycle
+      const cycleStart = path.indexOf(name)
+      const cycle = [...path.slice(cycleStart), name]
+      const cycleKey = cycle.sort().join(',')
+
+      // Only report each unique cycle once
+      if (!cyclesFound.has(cycleKey)) {
+        cyclesFound.add(cycleKey)
+        const definition = program.definitions.get(name)
+        diagnostics.push({
+          message: `Circular dependency: ${cycle.join(' -> ')}`,
+          severity: 'error',
+          cycle,
+          line: definition?.line || 1,
+          column: 1,
+          range: definition?.range || [0, 0]
+        })
+      }
+      return
+    }
+
+    if (visited.has(name)) {
+      return
+    }
+
+    visiting.add(name)
+    path.push(name)
+
+    const deps = getDependencies(program, name)
+    for (const dep of deps) {
+      dfs(dep, [...path])
+    }
+
+    path.pop()
+    visiting.delete(name)
+    visited.add(name)
+  }
+
+  for (const name of program.definitions.keys()) {
+    if (!visited.has(name)) {
+      dfs(name)
+    }
+  }
+
+  return diagnostics
 }
 
 /**
@@ -76,13 +146,34 @@ export function detectCycles(program) {
  * @returns {Object[]} Array of forward reference diagnostics
  */
 export function detectForwardReferences(program) {
-  // TODO: Implement forward reference detection
-  // Algorithm:
-  // 1. Process definitions in order
-  // 2. Track which names have been defined so far
-  // 3. For each definition, check if it references undefined names
-  // 4. Create diagnostics for forward references
-  throw new Error('Not implemented')
+  const diagnostics = []
+  const definedNames = new Set()
+
+  // Convert definitions to array to maintain order
+  const defArray = Array.from(program.definitions.entries())
+
+  for (const [name, definition] of defArray) {
+    // Check each token in this definition
+    for (const token of definition.tokens) {
+      const tokenName = token.slice(1, -1)
+
+      // If it's a reference to another definition that hasn't been defined yet
+      if (program.definitions.has(tokenName) && !definedNames.has(tokenName)) {
+        diagnostics.push({
+          message: `Forward reference to '${tokenName}' before it is defined`,
+          severity: 'warning',
+          line: definition.line,
+          column: 1,
+          range: definition.range
+        })
+      }
+    }
+
+    // Mark this name as defined
+    definedNames.add(name)
+  }
+
+  return diagnostics
 }
 
 /**
@@ -91,10 +182,25 @@ export function detectForwardReferences(program) {
  * @returns {string[]} Array of unused definition names
  */
 export function findUnused(program) {
-  // TODO: Implement unused definition detection
-  // Algorithm:
-  // 1. Build reverse dependency map
-  // 2. Find definitions with no dependents
-  // 3. Return array of unused names
-  throw new Error('Not implemented')
+  const referenced = new Set()
+
+  // Find all referenced names
+  for (const [name, definition] of program.definitions) {
+    for (const token of definition.tokens) {
+      const tokenName = token.slice(1, -1)
+      if (program.definitions.has(tokenName)) {
+        referenced.add(tokenName)
+      }
+    }
+  }
+
+  // Find definitions that are not referenced
+  const unused = []
+  for (const name of program.definitions.keys()) {
+    if (!referenced.has(name)) {
+      unused.push(name)
+    }
+  }
+
+  return unused
 }

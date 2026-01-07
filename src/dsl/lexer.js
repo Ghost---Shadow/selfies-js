@@ -33,18 +33,120 @@ export const TokenType = {
  * }
  */
 export function lex(source) {
-  // TODO: Implement DSL lexer
-  // Algorithm:
-  // 1. Scan through source character by character
-  // 2. Track line and column numbers
-  // 3. Recognize patterns:
-  //    - [identifier] at start of line = NAME
-  //    - [token] after equals = SELFIES_TOKEN
-  //    - = symbol = EQUALS
-  //    - # to end of line = COMMENT
-  //    - \n = NEWLINE
-  // 4. Build and return token array
-  throw new Error('Not implemented')
+  const tokens = []
+  let line = 1
+  let column = 1
+  let i = 0
+
+  while (i < source.length) {
+    const char = source[i]
+    const startColumn = column
+    const startOffset = i
+
+    // Skip whitespace (except newlines)
+    if (char === ' ' || char === '\t' || char === '\r') {
+      i++
+      column++
+      continue
+    }
+
+    // Newline
+    if (char === '\n') {
+      tokens.push({
+        type: TokenType.NEWLINE,
+        value: '\n',
+        line,
+        column,
+        range: [i, i + 1]
+      })
+      i++
+      line++
+      column = 1
+      continue
+    }
+
+    // Comment
+    if (char === '#') {
+      const commentStart = i
+      let commentValue = ''
+      while (i < source.length && source[i] !== '\n') {
+        commentValue += source[i]
+        i++
+      }
+      tokens.push({
+        type: TokenType.COMMENT,
+        value: commentValue,
+        line,
+        column: startColumn,
+        range: [commentStart, i]
+      })
+      column += commentValue.length
+      continue
+    }
+
+    // Equals
+    if (char === '=') {
+      tokens.push({
+        type: TokenType.EQUALS,
+        value: '=',
+        line,
+        column,
+        range: [i, i + 1]
+      })
+      i++
+      column++
+      continue
+    }
+
+    // Bracketed token (could be NAME or SELFIES_TOKEN)
+    if (char === '[') {
+      const tokenStart = i
+      let tokenValue = '['
+      i++
+      column++
+
+      // Read until closing bracket
+      while (i < source.length && source[i] !== ']') {
+        tokenValue += source[i]
+        i++
+        column++
+      }
+
+      if (i >= source.length) {
+        throw new Error(`Unclosed bracket at line ${line}, column ${startColumn}`)
+      }
+
+      tokenValue += ']'
+      i++
+      column++
+
+      // Determine if this is a NAME or SELFIES_TOKEN
+      // We'll initially mark all as SELFIES_TOKEN
+      // The parser will determine context
+      tokens.push({
+        type: TokenType.SELFIES_TOKEN,
+        value: tokenValue,
+        line,
+        column: startColumn,
+        range: [tokenStart, i]
+      })
+      continue
+    }
+
+    // Unknown character
+    throw new Error(`Unexpected character '${char}' at line ${line}, column ${column}`)
+  }
+
+  // Add EOF token
+  tokens.push({
+    type: TokenType.EOF,
+    value: '',
+    line,
+    column,
+    range: [i, i]
+  })
+
+  return tokens
 }
 
 /**
@@ -53,8 +155,7 @@ export function lex(source) {
  * @returns {boolean} True if valid identifier start
  */
 function isIdentifierStart(char) {
-  // TODO: Check if char is letter or underscore
-  throw new Error('Not implemented')
+  return /[a-zA-Z_]/.test(char)
 }
 
 /**
@@ -63,6 +164,5 @@ function isIdentifierStart(char) {
  * @returns {boolean} True if valid identifier character
  */
 function isIdentifierChar(char) {
-  // TODO: Check if char is letter, digit, underscore, or hyphen
-  throw new Error('Not implemented')
+  return /[a-zA-Z0-9_-]/.test(char)
 }

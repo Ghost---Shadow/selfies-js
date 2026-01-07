@@ -44,8 +44,16 @@ describe('encode', () => {
     expect(encode('C1CC1')).toBe('[C][C][C][Ring1][=C]')
   })
 
-  // TODO: Error cases (POST-MVP)
-  test.skip('throws on invalid SMILES', () => {
-    // TODO: expect(() => encode('invalid')).toThrow()
+  // Error cases
+  test('throws on empty SMILES', () => {
+    expect(() => encode('')).toThrow('Empty SMILES string')
+  })
+
+  test('throws on unmatched parenthesis', () => {
+    expect(() => encode('C(C')).toThrow('Unmatched parenthesis')
+  })
+
+  test('throws on invalid bond at end', () => {
+    expect(() => encode('CC=')).toThrow('bond symbol at end')
   })
 })

@@ -73,47 +73,47 @@ describe('Valence edge cases', () => {
 describe('DSL edge cases', () => {
   // TODO: DSL parsing edge cases
 
-  test.skip('handles very long definition names', () => {
-    // TODO: Test DSL with long definition names (DSL parser not implemented yet)
+  test('handles very long definition names', () => {
     const longName = 'A'.repeat(100)
-    const dsl = `${longName} = [C][C][O]`
-    const result = parse(dsl)
-    expect(result.definitions).toHaveProperty(longName)
-    expect(result.definitions[longName]).toBe('[C][C][O]')
+    const dsl = `[${longName}] = [C][C][O]`
+    const program = parse(dsl)
+    expect(program.definitions.has(longName)).toBe(true)
+    const resolved = resolve(program, longName)
+    expect(resolved).toBe('[C][C][O]')
   })
 
-  test.skip('handles deep nesting in DSL', () => {
-    // TODO: Test deeply nested definitions (DSL parser not implemented yet)
+  test('handles deep nesting in DSL', () => {
     const dsl = `
-      A = [C][C]
-      B = {A}{A}
-      C = {B}{B}
-      D = {C}{C}
+[A] = [C][C]
+[B] = [A][A]
+[E] = [B][B]
+[D] = [E][E]
     `
-    const ast = parse(dsl)
-    expect(ast.definitions).toHaveProperty('A')
-    expect(ast.definitions).toHaveProperty('B')
-    expect(ast.definitions).toHaveProperty('C')
-    expect(ast.definitions).toHaveProperty('D')
+    const program = parse(dsl)
+    expect(program.definitions.has('A')).toBe(true)
+    expect(program.definitions.has('B')).toBe(true)
+    expect(program.definitions.has('E')).toBe(true)
+    expect(program.definitions.has('D')).toBe(true)
 
-    // Resolve D which references C which references B which references A
-    // D = {C}{C} = {B}{B}{B}{B} = {A}{A}{A}{A}{A}{A}{A}{A} = [C][C][C][C][C][C][C][C][C][C][C][C][C][C][C][C]
-    const resolved = resolve(ast, 'D')
+    // Resolve D which references E which references B which references A
+    // D = [E][E] = [B][B][B][B] = [A][A][A][A][A][A][A][A] = [C][C][C][C][C][C][C][C][C][C][C][C][C][C][C][C]
+    const resolved = resolve(program, 'D')
     expect(resolved).toBe('[C][C][C][C][C][C][C][C][C][C][C][C][C][C][C][C]')
   })
 
-  test.skip('handles large DSL programs', () => {
-    // TODO: Test with 100 definitions (DSL parser not implemented yet)
+  test('handles large DSL programs', () => {
     const definitions = []
     for (let i = 0; i < 100; i++) {
-      definitions.push(`Molecule${i} = [C][C][O]`)
+      definitions.push(`[Molecule${i}] = [C][C][O]`)
     }
     const dsl = definitions.join('\n')
-    const ast = parse(dsl)
-    expect(Object.keys(ast.definitions).length).toBe(100)
-    // Verify all definitions are present
+    const program = parse(dsl)
+    expect(program.definitions.size).toBe(100)
+    // Verify all definitions are present and resolvable
     for (let i = 0; i < 100; i++) {
-      expect(ast.definitions[`Molecule${i}`]).toBe('[C][C][O]')
+      expect(program.definitions.has(`Molecule${i}`)).toBe(true)
+      const resolved = resolve(program, `Molecule${i}`)
+      expect(resolved).toBe('[C][C][O]')
     }
   })
 })
