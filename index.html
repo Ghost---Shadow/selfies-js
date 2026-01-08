@@ -133,6 +133,22 @@
             font-family: 'Consolas', monospace;
         }
 
+        .molecule-viewer {
+            background: #1e1e1e;
+            border: 1px solid #3e3e42;
+            border-radius: 4px;
+            padding: 1rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 250px;
+        }
+
+        .molecule-viewer canvas {
+            max-width: 100%;
+            height: auto;
+        }
+
         .error {
             background: #5a1d1d;
             border-color: #be1100;
@@ -283,10 +299,22 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/javascript/javascript.min.js"></script>
 
+    <!-- Load RDKit.js -->
+    <script src="https://unpkg.com/@rdkit/rdkit/dist/RDKit_minimal.js"></script>
+
     <!-- Load SELFIES-JS from gh-pages (absolute path) -->
     <script src="https://ghost---shadow.github.io/selfies-js/dist/selfies.umd.min.js"></script>
 
     <script>
+        // Initialize RDKit
+        let RDKitModule;
+        initRDKitModule().then(function(instance) {
+            RDKitModule = instance;
+            console.log('RDKit version: ' + RDKitModule.version());
+            // Process initial content after RDKit is loaded
+            processInput();
+        });
+
         // Initialize CodeMirror
         const editor = CodeMirror(document.getElementById('editor'), {
             value: '[C][C][O]\n[C][=C]\n[C][#N]\nCCO\nc1ccccc1',
@@ -313,11 +341,41 @@
             };
         }
 
+        // Draw molecule using RDKit
+        function drawMolecule(smiles, canvasId) {
+            if (!RDKitModule) {
+                return '<p style="color: #858585;">Loading RDKit...</p>';
+            }
+
+            try {
+                const mol = RDKitModule.get_mol(smiles);
+                if (!mol || !mol.is_valid()) {
+                    return '<p style="color: #f48771;">Invalid molecule structure</p>';
+                }
+
+                // Create canvas element with unique ID
+                const canvas = document.createElement('canvas');
+                canvas.id = canvasId;
+                canvas.width = 300;
+                canvas.height = 250;
+
+                // Draw molecule to canvas
+                mol.draw_to_canvas(canvas, -1, -1);
+                mol.delete();
+
+                return canvas.outerHTML;
+            } catch (error) {
+                console.error('RDKit drawing error:', error);
+                return '<p style="color: #f48771;">Error rendering structure</p>';
+            }
+        }
+
         // Process SELFIES/SMILES input
         function processInput() {
             const lines = editor.getValue().split('\n');
             let html = '';
             let hasError = false;
+            let moleculeIndex = 0;
 
             for (const line of lines) {
                 const trimmed = line.trim();
@@ -331,6 +389,9 @@
                         const isValid = SELFIES.isValid(trimmed);
                         const mw = SELFIES.getMolecularWeight(trimmed);
                         const formula = SELFIES.getFormula(trimmed);
+
+                        const canvasId = `molecule-canvas-${moleculeIndex++}`;
+                        const moleculeViewer = drawMolecule(decoded, canvasId);
 
                         html += `
                             <div class="output-section">
@@ -355,6 +416,10 @@
                                     <span class="output-label">Molecular Weight:</span>
                                     <span class="output-value">${mw.toFixed(2)} g/mol</span>
                                 </div>
+                                <div style="margin-top: 1rem;">
+                                    <h4 style="color: #4ec9b0; font-size: 0.85rem; margin-bottom: 0.5rem;">2D STRUCTURE</h4>
+                                    <div class="molecule-viewer">${moleculeViewer}</div>
+                                </div>
                             </div>
                         `;
                     } else {
@@ -362,6 +427,9 @@
                         const encoded = SELFIES.encode(trimmed);
                         const mw = SELFIES.getMolecularWeight(encoded);
                         const formula = SELFIES.getFormula(encoded);
+
+                        const canvasId = `molecule-canvas-${moleculeIndex++}`;
+                        const moleculeViewer = drawMolecule(trimmed, canvasId);
 
                         html += `
                             <div class="output-section">
@@ -381,6 +449,10 @@
                                 <div class="output-row">
                                     <span class="output-label">Molecular Weight:</span>
                                     <span class="output-value">${mw.toFixed(2)} g/mol</span>
+                                </div>
+                                <div style="margin-top: 1rem;">
+                                    <h4 style="color: #4ec9b0; font-size: 0.85rem; margin-bottom: 0.5rem;">2D STRUCTURE</h4>
+                                    <div class="molecule-viewer">${moleculeViewer}</div>
                                 </div>
                             </div>
                         `;
@@ -409,6 +481,7 @@
                         <h3>Welcome</h3>
                         <p>Type a SELFIES string in the editor (e.g., <code>[C][C][O]</code>) to see it decoded to SMILES.</p>
                         <p style="margin-top: 0.5rem;">Or try encoding SMILES to SELFIES!</p>
+                        <p style="margin-top: 0.5rem; color: #4ec9b0;">New: View 2D molecular structures with RDKit!</p>
                     </div>
                 `;
             }
@@ -547,7 +620,9 @@ C=C`);
             output.innerHTML = `
                 <div class="output-section">
                     <h3>Welcome</h3>
-                    <p>Type a SELFIES string in the editor to see it decoded to SMILES.</p>
+                    <p>Type a SELFIES string in the editor (e.g., <code>[C][C][O]</code>) to see it decoded to SMILES.</p>
+                    <p style="margin-top: 0.5rem;">Or try encoding SMILES to SELFIES!</p>
+                    <p style="margin-top: 0.5rem; color: #4ec9b0;">New: View 2D molecular structures with RDKit!</p>
                 </div>
             `;
             status.textContent = 'Ready';
@@ -555,8 +630,7 @@ C=C`);
         });
         document.getElementById('exampleBtn').addEventListener('click', loadExample);
 
-        // Initial processing
-        processInput();
+        // Initial processing will be done after RDKit loads (see initRDKitModule callback)
 
         // Check if SELFIES loaded correctly
         if (typeof SELFIES === 'undefined') {
