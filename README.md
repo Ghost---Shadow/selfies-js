@@ -58,6 +58,18 @@ const svg = await renderSelfies('[C][C][O]', {
 })
 ```
 
+## Interactive Playground
+
+Try SELFIES-JS live in your browser:
+
+**[https://ghost---shadow.github.io/selfies-js/](https://ghost---shadow.github.io/selfies-js/)**
+
+Features:
+- Live SELFIES ↔ SMILES conversion
+- Real-time molecular properties
+- Built-in test suite
+- Syntax highlighting
+
 ## Installation
 
 ```bash
