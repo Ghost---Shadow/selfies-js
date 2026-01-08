@@ -1,0 +1,171 @@
+name: Build and Upload Bundle
+
+on:
+  release:
+    types: [created]
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+
+jobs:
+  build-bundle:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Create build directory
+        run: mkdir -p dist
+
+      - name: Bundle with Bun
+        run: |
+          # Bundle main entry point
+          bun build src/index.js \
+            --outfile dist/selfies.js \
+            --format esm \
+            --target browser \
+            --external @rdkit/rdkit
+
+          # Create minified version
+          bun build src/index.js \
+            --outfile dist/selfies.min.js \
+            --format esm \
+            --target browser \
+            --minify \
+            --external @rdkit/rdkit
+
+          # Bundle DSL module separately
+          bun build src/dsl/index.js \
+            --outfile dist/selfies-dsl.js \
+            --format esm \
+            --target browser \
+            --external @rdkit/rdkit
+
+          bun build src/dsl/index.js \
+            --outfile dist/selfies-dsl.min.js \
+            --format esm \
+            --target browser \
+            --minify \
+            --external @rdkit/rdkit
+
+      - name: Create UMD bundles for CDN
+        run: |
+          # Create IIFE/UMD versions for direct browser use
+          bun build src/index.js \
+            --outfile dist/selfies.umd.js \
+            --format iife \
+            --global-name SELFIES \
+            --target browser \
+            --external @rdkit/rdkit
+
+          bun build src/index.js \
+            --outfile dist/selfies.umd.min.js \
+            --format iife \
+            --global-name SELFIES \
+            --target browser \
+            --minify \
+            --external @rdkit/rdkit
+
+      - name: Get package version
+        id: package-version
+        run: echo "version=$(bun --eval "console.log(require('./package.json').version)")" >> $GITHUB_OUTPUT
+
+      - name: Create bundle info
+        run: |
+          echo "# Bundle Information" > dist/README.md
+          echo "" >> dist/README.md
+          echo "Package: selfies-js" >> dist/README.md
+          echo "Version: ${{ steps.package-version.outputs.version }}" >> dist/README.md
+          echo "Build Date: $(date -u +'%Y-%m-%d %H:%M:%S UTC')" >> dist/README.md
+          echo "Commit: ${GITHUB_SHA::7}" >> dist/README.md
+          echo "" >> dist/README.md
+          echo "## Files" >> dist/README.md
+          echo "" >> dist/README.md
+          echo "### ESM Modules (for bundlers)" >> dist/README.md
+          echo "- \`selfies.js\` - Main module (unminified)" >> dist/README.md
+          echo "- \`selfies.min.js\` - Main module (minified)" >> dist/README.md
+          echo "- \`selfies-dsl.js\` - DSL module (unminified)" >> dist/README.md
+          echo "- \`selfies-dsl.min.js\` - DSL module (minified)" >> dist/README.md
+          echo "" >> dist/README.md
+          echo "### UMD Bundles (for direct browser use)" >> dist/README.md
+          echo "- \`selfies.umd.js\` - UMD bundle (unminified)" >> dist/README.md
+          echo "- \`selfies.umd.min.js\` - UMD bundle (minified)" >> dist/README.md
+          echo "" >> dist/README.md
+          echo "## Usage" >> dist/README.md
+          echo "" >> dist/README.md
+          echo "### In Browser (UMD)" >> dist/README.md
+          echo "\`\`\`html" >> dist/README.md
+          echo '<script src="selfies.umd.min.js"></script>' >> dist/README.md
+          echo "<script>" >> dist/README.md
+          echo "  const encoded = SELFIES.encode('CC');" >> dist/README.md
+          echo "  console.log(encoded);" >> dist/README.md
+          echo "</script>" >> dist/README.md
+          echo "\`\`\`" >> dist/README.md
+          echo "" >> dist/README.md
+          echo "### In Bundler (ESM)" >> dist/README.md
+          echo "\`\`\`javascript" >> dist/README.md
+          echo "import { encode, decode } from './selfies.min.js';" >> dist/README.md
+          echo "" >> dist/README.md
+          echo "const encoded = encode('CC');" >> dist/README.md
+          echo "console.log(encoded);" >> dist/README.md
+          echo "\`\`\`" >> dist/README.md
+          echo "" >> dist/README.md
+          echo "## Note" >> dist/README.md
+          echo "" >> dist/README.md
+          echo "RDKit is excluded from these bundles. If you need RDKit functionality," >> dist/README.md
+          echo "you'll need to include it separately." >> dist/README.md
+
+      - name: Calculate bundle sizes
+        run: |
+          echo "## Bundle Sizes" >> dist/README.md
+          echo "" >> dist/README.md
+          echo "\`\`\`" >> dist/README.md
+          ls -lh dist/*.js | awk '{print $9 ": " $5}' >> dist/README.md
+          echo "\`\`\`" >> dist/README.md
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: selfies-js-bundles-${{ steps.package-version.outputs.version }}
+          path: dist/
+          retention-days: 90
+
+      - name: Create GitHub Release Summary
+        run: |
+          echo "## 📦 Bundles Created" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Version: \`${{ steps.package-version.outputs.version }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Files:" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          ls -lh dist/*.js | awk '{print $9 " - " $5}' >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Download" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Artifacts are available for 90 days in the Actions tab." >> $GITHUB_STEP_SUMMARY
+
+      - name: Upload to release (if release event)
+        if: github.event_name == 'release'
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            dist/selfies.js
+            dist/selfies.min.js
+            dist/selfies-dsl.js
+            dist/selfies-dsl.min.js
+            dist/selfies.umd.js
+            dist/selfies.umd.min.js
+            dist/README.md
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

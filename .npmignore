@@ -1,0 +1,45 @@
+# Test files
+test/
+*.test.js
+*.spec.js
+
+# Benchmarks
+bench/
+
+# Build files
+*.log
+npm-debug.log*
+
+# Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# CI/CD (keep workflows out of package)
+.github/
+
+# Development
+.editorconfig
+.eslintrc*
+.prettierrc*
+
+# Documentation source (keep README.md)
+docs/
+examples/
+*.md
+!README.md
+
+# Misc
+coverage/
+.nyc_output/

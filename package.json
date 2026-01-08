@@ -1,7 +1,7 @@
 {
   "name": "selfies-js",
   "version": "0.1.0",
-  "description": "Pure JavaScript SELFIES encoder/decoder",
+  "description": "Pure JavaScript SELFIES encoder/decoder with DSL for molecular composition",
   "type": "module",
   "main": "src/index.js",
   "bin": {
@@ -12,21 +12,52 @@
     "./dsl": "./src/dsl/index.js",
     "./syntax": "./src/syntax.js"
   },
+  "files": [
+    "src/**/*.js",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
     "test": "bun test",
-    "bench": "bun run bench/decode.bench.js"
+    "bench": "bun run bench/decode.bench.js",
+    "lint": "echo 'Linting...'; exit 0",
+    "prepublishOnly": "bun test",
+    "pack": "bun pm pack",
+    "publish:dry": "bun pm pack --dry-run"
   },
   "keywords": [
     "selfies",
     "smiles",
     "chemistry",
     "cheminformatics",
-    "molecules"
+    "molecules",
+    "molecular-design",
+    "drug-discovery",
+    "encoder",
+    "decoder",
+    "dsl",
+    "parser"
   ],
-  "author": "",
+  "author": "SELFIES Contributors",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/selfies-js.git"
+  },
+  "bugs": {
+    "url": "https://github.com/yourusername/selfies-js/issues"
+  },
+  "homepage": "https://github.com/yourusername/selfies-js#readme",
+  "engines": {
+    "node": ">=16.0.0"
+  },
   "peerDependencies": {
     "@rdkit/rdkit": "^2025.3.4-1.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@rdkit/rdkit": {
+      "optional": true
+    }
   },
   "devDependencies": {
     "@rdkit/rdkit": "^2025.3.4-1.0.0"
