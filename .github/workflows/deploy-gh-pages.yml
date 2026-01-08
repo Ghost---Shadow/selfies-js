@@ -1,0 +1,78 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Build UMD bundle
+        run: |
+          # Check if dist exists and has the bundle
+          if [ ! -f "dist/selfies.umd.min.js" ]; then
+            echo "Building bundle..."
+            bun run build
+          else
+            echo "Bundle already exists"
+          fi
+
+      - name: Checkout gh-pages
+        uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+          path: gh-pages-branch
+
+      - name: Update gh-pages content
+        run: |
+          # Copy the latest bundle to gh-pages
+          cp dist/selfies.umd.min.js gh-pages-branch/selfies.umd.min.js
+
+          # Update timestamp in README
+          cd gh-pages-branch
+          echo "" >> README.md
+          echo "Last updated: $(date -u +'%Y-%m-%d %H:%M:%S UTC')" >> README.md
+
+      - name: Commit and push to gh-pages
+        run: |
+          cd gh-pages-branch
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          git add selfies.umd.min.js README.md
+
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "Update bundle from main ($(date -u +'%Y-%m-%d %H:%M:%S UTC'))"
+            git push origin gh-pages
+          fi
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./gh-pages-branch
+          publish_branch: gh-pages
+          force_orphan: false
