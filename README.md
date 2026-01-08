@@ -64,6 +64,37 @@ const svg = await renderSelfies('[C][C][O]', {
 npm install selfies-js
 ```
 
+### Browser Usage (CDN)
+
+For direct browser usage without a bundler, use the UMD bundle:
+
+```html
+<!-- Complete bundle with DSL + SELFIES encode/decode -->
+<script src="https://github.com/Ghost---Shadow/selfies-js/releases/latest/download/selfies-dsl.umd.min.js"></script>
+<script>
+  // DSL parsing
+  const parsed = SELFIESDSL.parse('[methyl] = [C]');
+  console.log(parsed);
+
+  // SELFIES encoding/decoding
+  const encoded = SELFIESDSL.encode('CC');
+  console.log(encoded); // '[C][C]'
+
+  const decoded = SELFIESDSL.decode('[C][C][O]');
+  console.log(decoded); // 'CCO'
+
+  // Molecular properties
+  const mw = SELFIESDSL.getMolecularWeight('[C][C][O]');
+  console.log(mw); // 46.07
+</script>
+```
+
+**Available bundles:**
+- `selfies-dsl.umd.min.js` - Complete bundle (DSL + core, recommended)
+- `selfies.umd.min.js` - Core only (encode/decode, no DSL)
+
+Download from the [latest release](https://github.com/Ghost---Shadow/selfies-js/releases/latest).
+
 ## Features
 
 - **Core:** Decode SELFIES to SMILES

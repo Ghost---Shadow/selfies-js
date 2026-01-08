@@ -32,30 +32,26 @@ jobs:
           bun build src/index.js \
             --outfile dist/selfies.js \
             --format esm \
-            --target browser \
-            --external @rdkit/rdkit
+            --target browser
 
           # Create minified version
           bun build src/index.js \
             --outfile dist/selfies.min.js \
             --format esm \
             --target browser \
-            --minify \
-            --external @rdkit/rdkit
+            --minify
 
           # Bundle DSL module separately
           bun build src/dsl/index.js \
             --outfile dist/selfies-dsl.js \
             --format esm \
-            --target browser \
-            --external @rdkit/rdkit
+            --target browser
 
           bun build src/dsl/index.js \
             --outfile dist/selfies-dsl.min.js \
             --format esm \
             --target browser \
-            --minify \
-            --external @rdkit/rdkit
+            --minify
 
       - name: Create UMD bundles for CDN
         run: |
@@ -64,16 +60,28 @@ jobs:
             --outfile dist/selfies.umd.js \
             --format iife \
             --global-name SELFIES \
-            --target browser \
-            --external @rdkit/rdkit
+            --target browser
 
           bun build src/index.js \
             --outfile dist/selfies.umd.min.js \
             --format iife \
             --global-name SELFIES \
             --target browser \
-            --minify \
-            --external @rdkit/rdkit
+            --minify
+
+          # Create DSL UMD bundles
+          bun build src/dsl/index.js \
+            --outfile dist/selfies-dsl.umd.js \
+            --format iife \
+            --global-name SELFIESDSL \
+            --target browser
+
+          bun build src/dsl/index.js \
+            --outfile dist/selfies-dsl.umd.min.js \
+            --format iife \
+            --global-name SELFIESDSL \
+            --target browser \
+            --minify
 
       - name: Get package version
         id: package-version
@@ -97,17 +105,28 @@ jobs:
           echo "- \`selfies-dsl.min.js\` - DSL module (minified)" >> dist/README.md
           echo "" >> dist/README.md
           echo "### UMD Bundles (for direct browser use)" >> dist/README.md
-          echo "- \`selfies.umd.js\` - UMD bundle (unminified)" >> dist/README.md
-          echo "- \`selfies.umd.min.js\` - UMD bundle (minified)" >> dist/README.md
+          echo "- \`selfies.umd.js\` - Main UMD bundle (unminified)" >> dist/README.md
+          echo "- \`selfies.umd.min.js\` - Main UMD bundle (minified)" >> dist/README.md
+          echo "- \`selfies-dsl.umd.js\` - DSL UMD bundle (unminified)" >> dist/README.md
+          echo "- \`selfies-dsl.umd.min.js\` - DSL UMD bundle (minified)" >> dist/README.md
           echo "" >> dist/README.md
           echo "## Usage" >> dist/README.md
           echo "" >> dist/README.md
-          echo "### In Browser (UMD)" >> dist/README.md
+          echo "### In Browser - Main (UMD)" >> dist/README.md
           echo "\`\`\`html" >> dist/README.md
           echo '<script src="selfies.umd.min.js"></script>' >> dist/README.md
           echo "<script>" >> dist/README.md
           echo "  const encoded = SELFIES.encode('CC');" >> dist/README.md
           echo "  console.log(encoded);" >> dist/README.md
+          echo "</script>" >> dist/README.md
+          echo "\`\`\`" >> dist/README.md
+          echo "" >> dist/README.md
+          echo "### In Browser - DSL (UMD)" >> dist/README.md
+          echo "\`\`\`html" >> dist/README.md
+          echo '<script src="selfies-dsl.umd.min.js"></script>' >> dist/README.md
+          echo "<script>" >> dist/README.md
+          echo "  const result = SELFIESDSL.parse('[methyl] = [C]');" >> dist/README.md
+          echo "  console.log(result);" >> dist/README.md
           echo "</script>" >> dist/README.md
           echo "\`\`\`" >> dist/README.md
           echo "" >> dist/README.md
@@ -166,6 +185,8 @@ jobs:
             dist/selfies-dsl.min.js
             dist/selfies.umd.js
             dist/selfies.umd.min.js
+            dist/selfies-dsl.umd.js
+            dist/selfies-dsl.umd.min.js
             dist/README.md
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

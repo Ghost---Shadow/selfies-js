@@ -42,12 +42,12 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/yourusername/selfies-js.git"
+    "url": "https://github.com/Ghost---Shadow/selfies-js.git"
   },
   "bugs": {
-    "url": "https://github.com/yourusername/selfies-js/issues"
+    "url": "https://github.com/Ghost---Shadow/selfies-js/issues"
   },
-  "homepage": "https://github.com/yourusername/selfies-js#readme",
+  "homepage": "https://github.com/Ghost---Shadow/selfies-js#readme",
   "engines": {
     "node": ">=16.0.0"
   },
