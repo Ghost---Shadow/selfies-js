@@ -267,9 +267,9 @@
                 <line x1="30" y1="50" x2="50" y2="80" stroke="#858585" stroke-width="2"/>
                 <line x1="70" y1="50" x2="50" y2="80" stroke="#858585" stroke-width="2"/>
             </svg>
-            SELFIES-JS Playground
+            SELFIES Playground
         </h1>
-        <p class="subtitle">A 100% robust molecular string representation for JavaScript</p>
+        <p class="subtitle">Interactive playground for the SELFIES molecular DSL</p>
     </header>
 
     <div class="container">
@@ -333,7 +333,21 @@
 
         // Initialize CodeMirror
         const editor = CodeMirror(document.getElementById('editor'), {
-            value: '[C][C][O]\n[C][=C]\n[C][#N]\nCCO\nc1ccccc1',
+            value: `# SELFIES DSL Example
+# Define named molecules and compose them
+
+# Basic building blocks
+[methyl] = [C]
+[ethyl] = [C][C]
+[hydroxyl] = [O]
+
+# Compose molecules
+[ethanol] = [ethyl][hydroxyl]
+
+# Or use raw SELFIES/SMILES
+[C][C][O]
+CCO
+c1ccccc1`,
             mode: 'javascript',
             theme: 'monokai',
             lineNumbers: true,
@@ -397,22 +411,99 @@
             }, 10);
         }
 
-        // Process SELFIES/SMILES input
+        // Process SELFIES/SMILES input with DSL support
         function processInput() {
-            const lines = editor.getValue().split('\n');
+            const text = editor.getValue();
+            const lines = text.split('\n');
             let html = '';
             let hasError = false;
             let moleculeIndex = 0;
             const moleculesToRender = []; // Track molecules to render after DOM update
 
-            for (const line of lines) {
+            // Parse the text to extract definitions
+            let parseResult;
+            try {
+                parseResult = SELFIES.parse(text);
+            } catch (err) {
+                console.error('Parse error:', err);
+                parseResult = null;
+            }
+
+            for (let i = 0; i < lines.length; i++) {
+                const line = lines[i];
                 const trimmed = line.trim();
                 if (!trimmed || trimmed.startsWith('#')) continue;
 
                 try {
-                    // Check if it's SELFIES (contains brackets) or SMILES
-                    if (trimmed.includes('[') && trimmed.includes(']')) {
-                        // Try to decode as SELFIES
+                    // Check if it's a definition: [name] = [expression]
+                    const defMatch = trimmed.match(/^\[([^\]]+)\]\s*=\s*(.+)$/);
+
+                    if (defMatch) {
+                        // It's a definition
+                        const name = defMatch[1];
+                        const expression = defMatch[2];
+
+                        let selfies = null;
+                        let smiles = null;
+
+                        try {
+                            // Resolve the definition to get the full SELFIES
+                            if (parseResult) {
+                                selfies = SELFIES.resolve(parseResult, name, { validateValence: false });
+                            } else {
+                                // Fallback: just use the expression directly
+                                selfies = expression;
+                            }
+
+                            if (selfies) {
+                                smiles = SELFIES.decode(selfies);
+                            }
+                        } catch (err) {
+                            throw new Error(`Failed to resolve '${name}': ${err.message}`);
+                        }
+
+                        if (!smiles) {
+                            throw new Error(`Could not decode '${name}' to SMILES`);
+                        }
+
+                        const mw = SELFIES.getMolecularWeight(selfies);
+                        const formula = SELFIES.getFormula(selfies);
+
+                        const svgId = `molecule-svg-${moleculeIndex++}`;
+                        const moleculeViewer = drawMolecule(smiles, svgId);
+                        moleculesToRender.push({ smiles, svgId });
+
+                        html += `
+                            <div class="output-section">
+                                <h3>Definition: ${name}</h3>
+                                <div class="output-row">
+                                    <span class="output-label">Expression:</span>
+                                    <span class="output-value">${expression}</span>
+                                </div>
+                                <div class="output-row">
+                                    <span class="output-label">SELFIES:</span>
+                                    <span class="output-value">${selfies}</span>
+                                </div>
+                                <div class="output-row">
+                                    <span class="output-label">SMILES:</span>
+                                    <span class="output-value">${smiles}</span>
+                                </div>
+                                <div class="output-row">
+                                    <span class="output-label">Formula:</span>
+                                    <span class="output-value">${formula}</span>
+                                </div>
+                                <div class="output-row">
+                                    <span class="output-label">Molecular Weight:</span>
+                                    <span class="output-value">${mw.toFixed(2)} g/mol</span>
+                                </div>
+                                <div style="margin-top: 1rem;">
+                                    <h4 style="color: #4ec9b0; font-size: 0.85rem; margin-bottom: 0.5rem;">2D STRUCTURE</h4>
+                                    <div class="molecule-viewer">${moleculeViewer}</div>
+                                </div>
+                            </div>
+                        `;
+                    } else if (trimmed.includes('[') && trimmed.includes(']')) {
+                        // Try to decode as raw SELFIES
                         const decoded = SELFIES.decode(trimmed);
                         const isValid = SELFIES.isValid(trimmed);
                         const mw = SELFIES.getMolecularWeight(trimmed);
@@ -508,9 +599,15 @@
             if (html === '') {
                 html = `
                     <div class="output-section">
-                        <h3>Welcome</h3>
-                        <p>Type a SELFIES string in the editor (e.g., <code>[C][C][O]</code>) to see it decoded to SMILES.</p>
-                        <p style="margin-top: 0.5rem;">Or try encoding SMILES to SELFIES!</p>
+                        <h3>Welcome to SELFIES Playground</h3>
+                        <p>Define named molecules using the SELFIES DSL:</p>
+                        <pre style="background: #252526; padding: 0.75rem; border-radius: 3px; margin: 0.5rem 0;"><code>[methyl] = [C]
+[ethyl] = [C][C]
+[ethanol] = [ethyl][O]</code></pre>
+                        <p style="margin-top: 0.5rem;">Or use raw SELFIES/SMILES directly:</p>
+                        <pre style="background: #252526; padding: 0.75rem; border-radius: 3px; margin: 0.5rem 0;"><code>[C][C][O]
+CCO
+c1ccccc1</code></pre>
                         <p style="margin-top: 0.5rem; color: #4ec9b0;">View 2D molecular structures for all molecules!</p>
                     </div>
                 `;
@@ -633,17 +730,31 @@
 
         // Load example
         function loadExample() {
-            editor.setValue(`# SELFIES Examples
-[C][C][O]
-[C][=C]
-[C][#N]
-[C][C][Branch1][C][C][C]
+            editor.setValue(`# SELFIES DSL Example
+# Define reusable molecular fragments
 
-# SMILES Examples
+# Basic building blocks
+[methyl] = [C]
+[ethyl] = [C][C]
+[propyl] = [C][C][C]
+
+# Functional groups
+[hydroxyl] = [O]
+[carbonyl] = [C][=O]
+[carboxyl] = [carbonyl][O]
+
+# Compose molecules
+[ethanol] = [ethyl][hydroxyl]
+[acetic_acid] = [methyl][carboxyl]
+
+# Aromatic compounds
+[benzene] = [C][=C][C][=C][C][=C][Ring1][=Branch1]
+[toluene] = [methyl][benzene]
+
+# Or use raw SELFIES/SMILES
+[C][C][O]
 CCO
-c1ccccc1
-CC(C)C
-C=C`);
+c1ccccc1`);
             processInput();
         }
 
@@ -654,9 +765,15 @@ C=C`);
             editor.setValue('');
             output.innerHTML = `
                 <div class="output-section">
-                    <h3>Welcome</h3>
-                    <p>Type a SELFIES string in the editor (e.g., <code>[C][C][O]</code>) to see it decoded to SMILES.</p>
-                    <p style="margin-top: 0.5rem;">Or try encoding SMILES to SELFIES!</p>
+                    <h3>Welcome to SELFIES Playground</h3>
+                    <p>Define named molecules using the SELFIES DSL:</p>
+                    <pre style="background: #252526; padding: 0.75rem; border-radius: 3px; margin: 0.5rem 0;"><code>[methyl] = [C]
+[ethyl] = [C][C]
+[ethanol] = [ethyl][O]</code></pre>
+                    <p style="margin-top: 0.5rem;">Or use raw SELFIES/SMILES directly:</p>
+                    <pre style="background: #252526; padding: 0.75rem; border-radius: 3px; margin: 0.5rem 0;"><code>[C][C][O]
+CCO
+c1ccccc1</code></pre>
                     <p style="margin-top: 0.5rem; color: #4ec9b0;">View 2D molecular structures for all molecules!</p>
                 </div>
             `;
