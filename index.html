@@ -134,7 +134,7 @@
         }
 
         .molecule-viewer {
-            background: #1e1e1e;
+            background: #ffffff;
             border: 1px solid #3e3e42;
             border-radius: 4px;
             padding: 1rem;
@@ -144,9 +144,10 @@
             min-height: 250px;
         }
 
-        .molecule-viewer canvas {
+        .molecule-viewer svg {
             max-width: 100%;
             height: auto;
+            display: block;
         }
 
         .error {
@@ -299,21 +300,36 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/javascript/javascript.min.js"></script>
 
-    <!-- Load RDKit.js -->
-    <script src="https://unpkg.com/@rdkit/rdkit/dist/RDKit_minimal.js"></script>
+    <!-- Load smiles-drawer for molecule visualization -->
+    <script src="https://unpkg.com/smiles-drawer@2.0.1/dist/smiles-drawer.min.js"></script>
 
     <!-- Load SELFIES-JS from gh-pages (absolute path) -->
     <script src="https://ghost---shadow.github.io/selfies-js/dist/selfies.umd.min.js"></script>
 
     <script>
-        // Initialize RDKit
-        let RDKitModule;
-        initRDKitModule().then(function(instance) {
-            RDKitModule = instance;
-            console.log('RDKit version: ' + RDKitModule.version());
-            // Process initial content after RDKit is loaded
-            processInput();
-        });
+        // Initialize smiles-drawer
+        let smilesDrawer;
+
+        function initSmilesDrawer() {
+            if (typeof SmilesDrawer !== 'undefined' && !smilesDrawer) {
+                try {
+                    smilesDrawer = new SmilesDrawer.SvgDrawer({
+                        width: 300,
+                        height: 250,
+                        bondThickness: 2,
+                        fontSizeLarge: 14,
+                        fontSizeSmall: 10
+                    });
+                    console.log('SmilesDrawer initialized successfully');
+                    // Process initial content after drawer is loaded
+                    processInput();
+                } catch (err) {
+                    console.error('Failed to initialize SmilesDrawer:', err);
+                }
+            }
+        }
+
+        window.addEventListener('load', initSmilesDrawer);
 
         // Initialize CodeMirror
         const editor = CodeMirror(document.getElementById('editor'), {
@@ -341,33 +357,44 @@
             };
         }
 
-        // Draw molecule using RDKit
-        function drawMolecule(smiles, canvasId) {
-            if (!RDKitModule) {
-                return '<p style="color: #858585;">Loading RDKit...</p>';
+        // Draw molecule using smiles-drawer
+        function drawMolecule(smiles, svgId) {
+            if (!smilesDrawer) {
+                return '<p style="color: #858585;">Loading molecule drawer...</p>';
             }
 
-            try {
-                const mol = RDKitModule.get_mol(smiles);
-                if (!mol || !mol.is_valid()) {
-                    return '<p style="color: #f48771;">Invalid molecule structure</p>';
+            // Return SVG placeholder that will be filled in later
+            return `<svg id="${svgId}" width="300" height="250"></svg>`;
+        }
+
+        // Actually draw the molecule after DOM is updated
+        function renderMolecule(smiles, svgId) {
+            if (!smilesDrawer) {
+                console.error('SmilesDrawer not initialized');
+                return;
+            }
+
+            setTimeout(() => {
+                const svgElement = document.getElementById(svgId);
+                if (!svgElement) {
+                    console.error('SVG element not found:', svgId);
+                    return;
                 }
 
-                // Create canvas element with unique ID
-                const canvas = document.createElement('canvas');
-                canvas.id = canvasId;
-                canvas.width = 300;
-                canvas.height = 250;
-
-                // Draw molecule to canvas
-                mol.draw_to_canvas(canvas, -1, -1);
-                mol.delete();
-
-                return canvas.outerHTML;
-            } catch (error) {
-                console.error('RDKit drawing error:', error);
-                return '<p style="color: #f48771;">Error rendering structure</p>';
-            }
+                try {
+                    SmilesDrawer.parse(smiles, function(tree) {
+                        smilesDrawer.draw(tree, svgId, 'light', false);
+                    }, function(err) {
+                        console.error('Error parsing SMILES:', err);
+                        const container = svgElement.parentElement;
+                        if (container) {
+                            container.innerHTML = `<p style="color: #f48771;">Error rendering: ${err}</p>`;
+                        }
+                    });
+                } catch (error) {
+                    console.error('Error drawing structure:', error);
+                }
+            }, 10);
         }
 
         // Process SELFIES/SMILES input
@@ -376,6 +403,7 @@
             let html = '';
             let hasError = false;
             let moleculeIndex = 0;
+            const moleculesToRender = []; // Track molecules to render after DOM update
 
             for (const line of lines) {
                 const trimmed = line.trim();
@@ -390,8 +418,9 @@
                         const mw = SELFIES.getMolecularWeight(trimmed);
                         const formula = SELFIES.getFormula(trimmed);
 
-                        const canvasId = `molecule-canvas-${moleculeIndex++}`;
-                        const moleculeViewer = drawMolecule(decoded, canvasId);
+                        const svgId = `molecule-svg-${moleculeIndex++}`;
+                        const moleculeViewer = drawMolecule(decoded, svgId);
+                        moleculesToRender.push({ smiles: decoded, svgId });
 
                         html += `
                             <div class="output-section">
@@ -428,8 +457,9 @@
                         const mw = SELFIES.getMolecularWeight(encoded);
                         const formula = SELFIES.getFormula(encoded);
 
-                        const canvasId = `molecule-canvas-${moleculeIndex++}`;
-                        const moleculeViewer = drawMolecule(trimmed, canvasId);
+                        const svgId = `molecule-svg-${moleculeIndex++}`;
+                        const moleculeViewer = drawMolecule(trimmed, svgId);
+                        moleculesToRender.push({ smiles: trimmed, svgId });
 
                         html += `
                             <div class="output-section">
@@ -481,7 +511,7 @@
                         <h3>Welcome</h3>
                         <p>Type a SELFIES string in the editor (e.g., <code>[C][C][O]</code>) to see it decoded to SMILES.</p>
                         <p style="margin-top: 0.5rem;">Or try encoding SMILES to SELFIES!</p>
-                        <p style="margin-top: 0.5rem; color: #4ec9b0;">New: View 2D molecular structures with RDKit!</p>
+                        <p style="margin-top: 0.5rem; color: #4ec9b0;">View 2D molecular structures for all molecules!</p>
                     </div>
                 `;
             }
@@ -489,6 +519,11 @@
             output.innerHTML = html;
             status.textContent = hasError ? 'Error in input' : 'Ready';
             status.className = `status ${hasError ? 'error' : 'success'}`;
+
+            // Render all molecules after DOM is updated
+            moleculesToRender.forEach(({ smiles, svgId }) => {
+                renderMolecule(smiles, svgId);
+            });
         }
 
         // Run comprehensive tests
@@ -622,7 +657,7 @@ C=C`);
                     <h3>Welcome</h3>
                     <p>Type a SELFIES string in the editor (e.g., <code>[C][C][O]</code>) to see it decoded to SMILES.</p>
                     <p style="margin-top: 0.5rem;">Or try encoding SMILES to SELFIES!</p>
-                    <p style="margin-top: 0.5rem; color: #4ec9b0;">New: View 2D molecular structures with RDKit!</p>
+                    <p style="margin-top: 0.5rem; color: #4ec9b0;">View 2D molecular structures for all molecules!</p>
                 </div>
             `;
             status.textContent = 'Ready';
@@ -630,7 +665,7 @@ C=C`);
         });
         document.getElementById('exampleBtn').addEventListener('click', loadExample);
 
-        // Initial processing will be done after RDKit loads (see initRDKitModule callback)
+        // Initial processing will be done after smiles-drawer loads (see initSmilesDrawer callback)
 
         // Check if SELFIES loaded correctly
         if (typeof SELFIES === 'undefined') {
