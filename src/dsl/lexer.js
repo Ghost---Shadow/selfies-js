@@ -16,6 +16,15 @@ export const TokenType = {
   COMMENT: 'COMMENT',     // # comment
   NEWLINE: 'NEWLINE',     // \n
   EOF: 'EOF',             // end of file
+
+  // Import-related tokens
+  IMPORT: 'IMPORT',       // import keyword
+  FROM: 'FROM',           // from keyword
+  STRING: 'STRING',       // "path/to/file.selfies"
+  STAR: 'STAR',           // * (wildcard import)
+  COMMA: 'COMMA',         // , (separator in selective imports)
+  LBRACKET: 'LBRACKET',   // [ (for selective import list)
+  RBRACKET: 'RBRACKET',   // ] (for selective import list)
 }
 
 /**
@@ -98,6 +107,93 @@ export function lex(source) {
       continue
     }
 
+    // Star (for wildcard imports)
+    if (char === '*') {
+      tokens.push({
+        type: TokenType.STAR,
+        value: '*',
+        line,
+        column,
+        range: [i, i + 1]
+      })
+      i++
+      column++
+      continue
+    }
+
+    // Comma (for selective imports)
+    if (char === ',') {
+      tokens.push({
+        type: TokenType.COMMA,
+        value: ',',
+        line,
+        column,
+        range: [i, i + 1]
+      })
+      i++
+      column++
+      continue
+    }
+
+    // String literal (for import paths)
+    if (char === '"') {
+      const stringStart = i
+      let stringValue = '"'
+      i++
+      column++
+
+      while (i < source.length && source[i] !== '"' && source[i] !== '\n') {
+        stringValue += source[i]
+        i++
+        column++
+      }
+
+      if (i >= source.length || source[i] === '\n') {
+        throw new Error(`Unclosed string at line ${line}, column ${startColumn}`)
+      }
+
+      stringValue += '"'
+      i++
+      column++
+
+      tokens.push({
+        type: TokenType.STRING,
+        value: stringValue,
+        line,
+        column: startColumn,
+        range: [stringStart, i]
+      })
+      continue
+    }
+
+    // Keywords and identifiers (import, from)
+    if (isAlpha(char)) {
+      const wordStart = i
+      let wordValue = ''
+
+      while (i < source.length && isAlphaNumeric(source[i])) {
+        wordValue += source[i]
+        i++
+        column++
+      }
+
+      let type = TokenType.NAME
+      if (wordValue === 'import') {
+        type = TokenType.IMPORT
+      } else if (wordValue === 'from') {
+        type = TokenType.FROM
+      }
+
+      tokens.push({
+        type,
+        value: wordValue,
+        line,
+        column: startColumn,
+        range: [wordStart, i]
+      })
+      continue
+    }
+
     // Bracketed token (could be NAME or SELFIES_TOKEN)
     if (char === '[') {
       const tokenStart = i
@@ -147,4 +243,22 @@ export function lex(source) {
   })
 
   return tokens
+}
+
+/**
+ * Checks if character is alphabetic
+ * @param {string} char - Single character
+ * @returns {boolean}
+ */
+function isAlpha(char) {
+  return (char >= 'a' && char <= 'z') || (char >= 'A' && char <= 'Z')
+}
+
+/**
+ * Checks if character is alphanumeric
+ * @param {string} char - Single character
+ * @returns {boolean}
+ */
+function isAlphaNumeric(char) {
+  return isAlpha(char) || (char >= '0' && char <= '9') || char === '_'
 }

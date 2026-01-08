@@ -54,3 +54,17 @@ export {
 
 // Renderers (RDKit-based)
 export { renderSelfies, initRDKit } from './renderers/svg.js'
+
+// Syntax Highlighting API
+export {
+  tokenizeSelfies,
+  tokenizeDSL,
+  SyntaxTokenType,
+  TokenModifier,
+  getColorScheme,
+  getTextMateScopes,
+  getMonacoTokenTypes,
+  createMonacoLanguage,
+  validateTokenization,
+  highlightToHtml
+} from './syntax.js'
