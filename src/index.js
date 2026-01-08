@@ -32,6 +32,7 @@ export {
 export { parse } from './dsl/parser.js'
 export { resolve, resolveAll } from './dsl/resolver.js'
 export { getDependencies, getDependents } from './dsl/analyzer.js'
+export { loadWithImports, loadFile, parseImports } from './dsl/importer.js'
 
 // Errors
 export {
