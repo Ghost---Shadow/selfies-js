@@ -4,6 +4,14 @@
   <p>A pure JavaScript implementation of the SELFIES molecular string representation</p>
 </div>
 
+## What is SELFIES?
+
+**SELFIES** (SELF-referencIng Embedded Strings) is a 100% robust molecular string representation. Unlike SMILES, every SELFIES string corresponds to a valid molecule, making it ideal for machine learning and generative models in chemistry.
+
+This library is a JavaScript port inspired by the original Python implementation: **[aspuru-guzik-group/selfies](https://github.com/aspuru-guzik-group/selfies)**
+
+> Krenn, M., Häse, F., Nigam, A., Friederich, P., & Aspuru-Guzik, A. (2020). Self-Referencing Embedded Strings (SELFIES): A 100% robust molecular string representation. *Machine Learning: Science and Technology*, 1(4), 045024.
+
 ## Overview
 
 ```javascript
@@ -61,15 +69,127 @@ npm install selfies-js
 - **Core:** Decode SELFIES to SMILES
 - **Core:** Encode SMILES to SELFIES
 - **Validation:** Syntax and semantic validation
-- **Chemistry Validation:** RDKit-based molecular validity checking ✨ NEW
-- **Canonical SMILES:** Structure comparison and roundtrip validation ✨ NEW
+- **Chemistry Validation:** RDKit-based molecular validity checking
+- **Canonical SMILES:** Structure comparison and roundtrip validation
 - **Properties:** Molecular weight and formula calculation
 - **Constraints:** Customizable semantic constraints (bonding rules)
 - **Utilities:** Symbol counting, alphabet extraction
 - **DSL:** Define and resolve molecule libraries with named definitions
+- **Imports:** Modular .selfies files with import support
+- **CLI:** Command-line interface for executing .selfies files
 - **Rendering:** SVG visualization of molecular structures
 
-> **New in this version:** Comprehensive chemistry validation using RDKit! See [CHEMISTRY_VALIDATION.md](CHEMISTRY_VALIDATION.md) for full documentation.
+## CLI Usage
+
+The `selfies-js` CLI allows you to work with `.selfies` DSL files from the command line.
+
+### Commands
+
+```bash
+# Execute a .selfies file and output resolved definitions
+bun src/cli.js run molecules.selfies
+
+# Output as SMILES instead of SELFIES
+bun src/cli.js run molecules.selfies --format=smiles
+
+# Validate a .selfies file for errors
+bun src/cli.js validate molecules.selfies
+
+# List all definitions in a file
+bun src/cli.js list molecules.selfies
+
+# Show help
+bun src/cli.js help
+```
+
+### DSL Syntax
+
+The `.selfies` DSL allows you to define named molecular fragments and compose them hierarchically:
+
+```selfies
+# Comments start with #
+
+# Basic definitions
+[methyl] = [C]
+[ethyl] = [C][C]
+[hydroxyl] = [O]
+
+# Composition - reference other definitions
+[ethanol] = [ethyl][hydroxyl]
+
+# Complex structures with branches
+[isopropyl] = [C][Branch1][C][C][C]
+[isopropanol] = [isopropyl][hydroxyl]
+
+# Aromatic rings
+[phenyl] = [C][=C][C][=C][C][=C][Ring1][=Branch1]
+[toluene] = [methyl][phenyl]
+```
+
+### Import Syntax
+
+Import definitions from other `.selfies` files:
+
+```selfies
+# Import all definitions from another file
+import "./fragments.selfies"
+
+# Alternative syntax for importing all
+import * from "./common.selfies"
+
+# Import specific definitions only
+import [methyl, ethyl, hydroxyl] from "./base.selfies"
+
+# Use imported definitions
+[my_molecule] = [methyl][hydroxyl]
+```
+
+Imports support:
+- **Relative paths** resolved from the importing file's location
+- **Chained imports** (file A imports B, B imports C)
+- **Circular import detection** with clear error messages
+- **Selective imports** to only include what you need
+
+### Example Output
+
+```bash
+$ bun src/cli.js run molecules.selfies --format=smiles
+methyl: C
+ethyl: CC
+hydroxyl: O
+ethanol: CCO
+isopropyl: C(C)C
+isopropanol: C(C)CO
+phenyl: C1=CC=CC=C1
+toluene: CC1=CC=CC=C1
+```
+
+## DSL API
+
+```javascript
+import { parse, resolve, resolveAll } from 'selfies-js/dsl'
+import { loadFile } from 'selfies-js/dsl'
+
+// Load a file with imports
+const program = loadFile('molecules.selfies')
+
+// Or parse source directly
+const source = `
+[methyl] = [C]
+[ethanol] = [methyl][C][O]
+`
+const program = parse(source)
+
+// Resolve a single definition
+resolve(program, 'ethanol')  // '[C][C][O]'
+
+// Resolve with SMILES output
+resolve(program, 'ethanol', { decode: true })  // 'CCO'
+
+// Resolve all definitions
+const all = resolveAll(program)
+// Map { 'methyl' => '[C]', 'ethanol' => '[C][C][O]' }
+```
 
 ## Visualization
 
@@ -96,11 +216,31 @@ Features:
 - Stereochemistry notation
 - Industry-standard rendering
 
-## Status
+## Examples
 
-🚧 **Work in Progress** - This library is currently under development.
+See the `examples/` directory for sample `.selfies` files:
 
-See the design document for full API documentation and implementation details.
+- `base-fragments.selfies` - Reusable building blocks (alkyl groups, functional groups, halogens)
+- `molecules-with-imports.selfies` - Demonstrates importing and composing molecules
+- `organic-chemistry.selfies` - Alcohols, aldehydes, acids, amines, ethers
+- `drug-fragments.selfies` - Pharmacophore fragments, drug-like building blocks
+- `polymers.selfies` - Monomers, repeat units, oligomers
+
+## Known Limitations
+
+The encoder/decoder handles most common organic molecules correctly. Some complex cases have known limitations:
+
+- **Bracket atoms** in SMILES (`[nH]`, `[C@@]`, `[13C]`) - limited support
+- **Fused aromatic ring systems** - some complex cases may not roundtrip correctly
+- **Polycyclic structures** with multiple ring closures - partial support
+
+For complete SELFIES support, use the original Python library: [aspuru-guzik-group/selfies](https://github.com/aspuru-guzik-group/selfies)
+
+## References
+
+- **Original SELFIES Paper:** Krenn, M., Häse, F., Nigam, A., Friederich, P., & Aspuru-Guzik, A. (2020). Self-Referencing Embedded Strings (SELFIES): A 100% robust molecular string representation. *Machine Learning: Science and Technology*, 1(4), 045024. [DOI: 10.1088/2632-2153/aba947](https://doi.org/10.1088/2632-2153/aba947)
+
+- **Python Implementation:** [github.com/aspuru-guzik-group/selfies](https://github.com/aspuru-guzik-group/selfies)
 
 ## License
 

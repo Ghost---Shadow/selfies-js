@@ -1,0 +1,4 @@
+
+import [methyl, hydroxyl] from "./base.selfies"
+
+[methanol] = [methyl][hydroxyl]

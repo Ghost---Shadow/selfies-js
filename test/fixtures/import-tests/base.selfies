@@ -1,0 +1,5 @@
+
+# Base definitions
+[methyl] = [C]
+[ethyl] = [C][C]
+[hydroxyl] = [O]

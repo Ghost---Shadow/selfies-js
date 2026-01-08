@@ -1,0 +1,38 @@
+# Molecules With Imports
+# Demonstrates importing from other .selfies files
+
+# Import all definitions from base-fragments
+import "./base-fragments.selfies"
+
+# Now we can use imported definitions
+
+# === ALCOHOLS (using imported alkyl groups) ===
+[methanol] = [methyl][hydroxyl]
+[ethanol] = [ethyl][hydroxyl]
+[propanol] = [propyl][hydroxyl]
+[isopropanol] = [isopropyl][hydroxyl]
+
+# === AMINES ===
+[methylamine] = [methyl][amino]
+[ethylamine] = [ethyl][amino]
+[propylamine] = [propyl][amino]
+
+# === CARBOXYLIC ACIDS ===
+[acetic_acid] = [methyl][carboxyl]
+[propionic_acid] = [ethyl][carboxyl]
+[butyric_acid] = [propyl][carboxyl]
+
+# === THIOLS ===
+[methanethiol] = [methyl][thiol]
+[ethanethiol] = [ethyl][thiol]
+
+# === HALOGENATED COMPOUNDS ===
+[chloromethane] = [methyl][chloro]
+[bromomethane] = [methyl][bromo]
+[fluoromethane] = [methyl][fluoro]
+
+# === AROMATIC COMPOUNDS ===
+[toluene] = [methyl][phenyl]
+[ethylbenzene] = [ethyl][phenyl]
+[phenol] = [phenyl][hydroxyl]
+[aniline] = [phenyl][amino]

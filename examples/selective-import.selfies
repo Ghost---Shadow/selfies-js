@@ -1,0 +1,12 @@
+# Selective Import Demo
+# Import only specific definitions from another file
+
+# Only import what we need
+import [methyl, ethyl, hydroxyl] from "./base-fragments.selfies"
+
+# Now we can only use methyl, ethyl, and hydroxyl
+[methanol] = [methyl][hydroxyl]
+[ethanol] = [ethyl][hydroxyl]
+
+# These would NOT work because we didn't import them:
+# [toluene] = [methyl][phenyl]  # Error: phenyl not imported

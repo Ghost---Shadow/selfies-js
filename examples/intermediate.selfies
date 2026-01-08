@@ -1,0 +1,10 @@
+# Intermediate definitions
+# Imports from base-fragments and defines more complex structures
+
+import "./base-fragments.selfies"
+
+# Build upon imported definitions
+[ethylene_glycol] = [hydroxyl][ethyl][hydroxyl]
+[propylene_glycol] = [hydroxyl][propyl][hydroxyl]
+[acetyl] = [methyl][carbonyl]
+[benzoyl] = [phenyl][carbonyl]

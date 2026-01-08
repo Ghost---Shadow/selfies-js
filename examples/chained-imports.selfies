@@ -1,0 +1,14 @@
+# Chained Imports Demo
+# Imports from a file that itself imports from another file
+
+import "./intermediate.selfies"
+
+# Can use definitions from intermediate.selfies
+[diacetyl] = [acetyl][acetyl]
+
+# Can also use definitions that intermediate.selfies imported from base-fragments
+[methyl_acetate] = [acetyl][hydroxyl][methyl]
+[ethyl_acetate] = [acetyl][hydroxyl][ethyl]
+
+# Build complex molecules from all available definitions
+[phenyl_ethanol] = [phenyl][ethyl][hydroxyl]
