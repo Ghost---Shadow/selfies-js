@@ -29,7 +29,9 @@ The playground demonstrates:
 
 ## Bundle
 
-This page loads the minified UMD bundle from GitHub releases:
+This page uses a self-hosted bundle located at `./dist/selfies.umd.min.js` to avoid CORS issues.
+
+The bundle is also available from GitHub releases (once v0.1.0 is published):
 ```
 https://github.com/Ghost---Shadow/selfies-js/releases/latest/download/selfies.umd.min.js
 ```
