@@ -159,6 +159,12 @@ export async function getValidationDetails(selfies) {
       return result
     }
 
+    // Empty SMILES means the SELFIES contained only invalid/unknown tokens
+    if (!result.smiles || result.smiles.length === 0) {
+      result.error = 'Decoded to empty SMILES (invalid tokens in SELFIES)'
+      return result
+    }
+
     // Try to create molecule
     const mol = RDKit.get_mol(result.smiles)
     if (!mol) {

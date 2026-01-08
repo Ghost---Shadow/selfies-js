@@ -245,13 +245,14 @@ describe('Fixture Programs', () => {
 
       // Undefined names are treated as primitive SELFIES tokens (could be valid)
       // compound1 uses [undefined_group] which gets passed through as-is
-      const result1 = resolve(program, 'compound1')
+      // Skip valence validation since these contain undefined tokens
+      const result1 = resolve(program, 'compound1', { validateValence: false })
       expect(result1).toContain('[undefined_group]')
 
-      const result2 = resolve(program, 'compound2')
+      const result2 = resolve(program, 'compound2', { validateValence: false })
       expect(result2).toContain('[mystery]')
 
-      const result3 = resolve(program, 'compound3')
+      const result3 = resolve(program, 'compound3', { validateValence: false })
       expect(result3).toContain('[unknown1]')
     })
 

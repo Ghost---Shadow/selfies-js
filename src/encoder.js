@@ -140,7 +140,16 @@ function handleBranch(smiles, index, state) {
   const branchTokens = encode(content)
   const branchSymbolCount = countSelfiesSymbols(branchTokens)
 
-  state.tokens.push('[Branch1]')
+  // Determine branch bond order from first character of branch content
+  // If branch starts with = or #, use bonded branch symbol
+  let branchSymbol = '[Branch1]'
+  if (content.startsWith('=')) {
+    branchSymbol = '[=Branch1]'
+  } else if (content.startsWith('#')) {
+    branchSymbol = '[#Branch1]'
+  }
+
+  state.tokens.push(branchSymbol)
   // For decoder formula: reads Q.value + 1 atoms from branch
   // We want: Q.value + 1 = branchSymbolCount, so Q.value = branchSymbolCount - 1
   state.tokens.push(getLengthToken(branchSymbolCount - 1))

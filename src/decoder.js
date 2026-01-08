@@ -336,14 +336,10 @@ export function handleRingClosure(targetIndex, prevAtomIndex, bondOrder, bonds, 
  * @returns {Object} { consumed, state, prevAtomIndex } - tokens consumed, new state, and atom index
  */
 export function processAtomToken(content, state, prevAtomIndex, atoms, bonds) {
-  let atomInfo
-  try {
-    atomInfo = parseAtomSymbol(content)
-  } catch (error) {
-    throw new Error(`Invalid atom token [${content}]: ${error.message}`)
-  }
+  const atomInfo = parseAtomSymbol(content)
 
   if (!atomInfo) {
+    // Invalid atom - return unchanged state
     return { consumed: 1, state, prevAtomIndex }
   }
 
@@ -499,7 +495,7 @@ export function parseAtomSymbol(content) {
                          'Li', 'Na', 'K', 'Mg', 'Ca', 'Zn', 'Fe', 'Cu', 'Ni', 'Co',
                          'Mn', 'Cr', 'V', 'Ti', 'Sc']
   if (!validElements.includes(element)) {
-    throw new Error(`Invalid element: ${element}`)
+    return null
   }
 
   return { element, bondOrder, stereo }
