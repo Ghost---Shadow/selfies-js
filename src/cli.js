@@ -77,7 +77,7 @@ function runCommand(args) {
 
   // Output results
   if (options.format === 'smiles') {
-    for (const [name, selfies] of Object.entries(resolved)) {
+    for (const [name, selfies] of resolved) {
       try {
         const smiles = decode(selfies)
         console.log(`${name}: ${smiles}`)
@@ -86,7 +86,7 @@ function runCommand(args) {
       }
     }
   } else {
-    for (const [name, selfies] of Object.entries(resolved)) {
+    for (const [name, selfies] of resolved) {
       console.log(`${name}: ${selfies}`)
     }
   }
@@ -196,7 +196,10 @@ function parseOptions(args) {
 }
 
 // Run CLI if executed directly
-if (import.meta.url === `file://${process.argv[1]}`) {
+// Handle both Unix and Windows paths
+const scriptPath = process.argv[1]?.replace(/\\/g, '/')
+const metaPath = import.meta.url.replace('file:///', '').replace('file://', '')
+if (scriptPath && (metaPath.endsWith(scriptPath) || scriptPath.endsWith(metaPath.split('/').pop()))) {
   main()
 }
 
