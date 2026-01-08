@@ -47,7 +47,7 @@ jobs:
       - name: Test CLI
         run: |
           echo '[methyl] = [C]' > test.selfies
-          bun run cli test.selfies
+          bun run src/cli.js run test.selfies
           rm test.selfies
         shell: bash
 
