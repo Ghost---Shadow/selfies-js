@@ -4,6 +4,10 @@
   <p><strong>Molecular fragments as reusable code.</strong></p>
 </div>
 
+## Why SELFIES?
+
+SELFIES was designed for machine learning — every string is a valid molecule, eliminating syntax errors in generative models. This DSL extends that principle: named fragments are easier for LLMs to compose correctly than raw atom strings, and undefined references fail loudly instead of producing silent errors.
+
 ## The Problem
 
 Pharmaceutical SMILES strings are unreadable:
@@ -13,6 +17,8 @@ CC(=O)Nc1ccc(O)cc1
 ```
 
 What is that? Acetaminophen. But you'd never know by looking at it.
+
+And when LLMs generate SMILES, they hallucinate invalid structures. SELFIES fixes the validity problem. The DSL fixes the readability problem.
 
 ## The Solution
 
