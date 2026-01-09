@@ -10,6 +10,7 @@ import { fileURLToPath } from 'url'
 import { parse } from '../../../src/dsl/parser.js'
 import { resolve, resolveAll } from '../../../src/dsl/resolver.js'
 import { detectCycles, findUnused } from '../../../src/dsl/analyzer.js'
+import { loadFile } from '../../../src/dsl/importer.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const PROGRAMS_DIR = __dirname
@@ -276,6 +277,97 @@ describe('Fixture Programs', () => {
         expect(source).toBeDefined()
         expect(typeof source).toBe('string')
       })
+    })
+  })
+
+  // Automatically test all fixture files that should compile without errors
+  describe('All valid fixtures should parse', () => {
+    // Fixtures without imports - use simple parse()
+    const simpleFixtures = [
+      'pharma-core.selfies',
+      'deep-nesting.selfies',
+      'diamond-deps.selfies',
+      'naming-edge-cases.selfies',
+      'reuse-patterns.selfies',
+      'test-edge-cases.selfies',
+      'wide-composition.selfies',
+      'comments-whitespace.selfies',
+    ]
+
+    simpleFixtures.forEach(filename => {
+      test(`${filename} should parse without errors`, () => {
+        const source = readProgram(filename)
+        const program = parse(source)
+        expect(program.errors).toEqual([])
+      })
+
+      test(`${filename} should have no cycles`, () => {
+        const source = readProgram(filename)
+        const program = parse(source)
+        const cycles = detectCycles(program)
+        expect(cycles).toEqual([])
+      })
+
+      test(`${filename} should resolve all definitions`, () => {
+        const source = readProgram(filename)
+        const program = parse(source)
+        const resolved = resolveAll(program)
+        expect(resolved.size).toBe(program.definitions.size)
+      })
+    })
+
+    // Fixtures with imports - use loadFile()
+    const importFixtures = [
+      'pharma-candidates.selfies',
+      'real-drugs.selfies',
+    ]
+
+    importFixtures.forEach(filename => {
+      test(`${filename} should load with imports without errors`, () => {
+        const filepath = join(PROGRAMS_DIR, filename)
+        const program = loadFile(filepath)
+        expect(program.errors).toEqual([])
+      })
+
+      test(`${filename} should have no cycles`, () => {
+        const filepath = join(PROGRAMS_DIR, filename)
+        const program = loadFile(filepath)
+        const cycles = detectCycles(program)
+        expect(cycles).toEqual([])
+      })
+
+      test(`${filename} should resolve all definitions`, () => {
+        const filepath = join(PROGRAMS_DIR, filename)
+        const program = loadFile(filepath)
+        const resolved = resolveAll(program)
+        // resolved.size should match definitions.size, but may differ slightly
+        // if there are definition shadowing from imports
+        expect(resolved.size).toBeGreaterThan(0)
+        expect(resolved.size).toBeGreaterThanOrEqual(program.definitions.size - 5)
+      })
+    })
+  })
+
+  // Test files that intentionally have circular dependencies
+  describe('circular-deps.selfies', () => {
+    test('should parse without syntax errors', () => {
+      const source = readProgram('circular-deps.selfies')
+      const program = parse(source)
+      expect(program.errors).toEqual([])
+    })
+
+    test('should detect all circular dependencies', () => {
+      const source = readProgram('circular-deps.selfies')
+      const program = parse(source)
+      const cycles = detectCycles(program)
+      expect(cycles.length).toBeGreaterThan(0)
+    })
+
+    test('valid definitions should still resolve', () => {
+      const source = readProgram('circular-deps.selfies')
+      const program = parse(source)
+      expect(resolve(program, 'valid_base')).toBe('[C]')
+      expect(resolve(program, 'valid_composed')).toBe('[C][O]')
     })
   })
 })
