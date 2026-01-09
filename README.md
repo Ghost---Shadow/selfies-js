@@ -201,6 +201,10 @@ Try it live: **[https://ghost---shadow.github.io/selfies-js/](https://ghost---sh
 
 For complete SELFIES support, use the Python library: [aspuru-guzik-group/selfies](https://github.com/aspuru-guzik-group/selfies)
 
+## Testimonies
+
+![testimony.png](testimony.png)
+
 ## License
 
 MIT
