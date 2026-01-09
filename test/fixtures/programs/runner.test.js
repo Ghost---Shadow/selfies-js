@@ -48,6 +48,32 @@ describe('Fixture Programs', () => {
 
       expect(resolve(program, 'methanol', { decode: true })).toBe('CO')
       expect(resolve(program, 'ethanol', { decode: true })).toBe('CCO')
+      expect(resolve(program, 'propanol', { decode: true })).toBe('CCCO')
+      expect(resolve(program, 'acetone', { decode: true })).toBe('CC=O')
+    })
+
+    test('should produce expected SMILES for all definitions', () => {
+      const source = readProgram('simple.selfies')
+      const program = parse(source)
+
+      const expectedSmiles = {
+        methyl: 'C',
+        ethyl: 'CC',
+        propyl: 'CCC',
+        butyl: 'CCCC',
+        hydroxyl: 'O',
+        carbonyl: 'O',
+        amino: 'N',
+        carboxyl: 'C=O',
+        methanol: 'CO',
+        ethanol: 'CCO',
+        propanol: 'CCCO',
+        acetone: 'CC=O',
+      }
+
+      for (const [name, expected] of Object.entries(expectedSmiles)) {
+        expect(resolve(program, name, { decode: true })).toBe(expected)
+      }
     })
   })
 
@@ -135,6 +161,29 @@ describe('Fixture Programs', () => {
       const cyclohexane = resolve(program, 'cyclohexane')
       expect(cyclohexane).toContain('[Ring1]')
     })
+
+    test('should produce expected SMILES', () => {
+      const source = readProgram('complex-molecules.selfies')
+      const program = parse(source)
+
+      const expectedSmiles = {
+        methyl: 'C',
+        ethyl: 'CC',
+        vinyl: 'C=C',
+        isobutane: 'CC(C)C',
+        neopentane: 'CC(C)(C)C',
+        benzene: 'C1=CC=CC=C1',
+        phenyl: 'C1=CC=CC=C1',
+        toluene: 'C1=CC=CC=C1C',
+        styrene: 'C1=CC=CC=C1C=C',
+        cyclopentane: 'C1CCCC1',
+        cyclohexane: 'C1CCCCC1',
+      }
+
+      for (const [name, expected] of Object.entries(expectedSmiles)) {
+        expect(resolve(program, name, { decode: true })).toBe(expected)
+      }
+    })
   })
 
   describe('syntax-errors.selfies', () => {
@@ -212,6 +261,30 @@ describe('Fixture Programs', () => {
       expect(resolve(program, 'phenol')).toBe('[C][=C][C][=C][C][=C][Ring1][=Branch1][O]')
       expect(resolve(program, 'aniline')).toBe('[C][=C][C][=C][C][=C][Ring1][=Branch1][N]')
       expect(resolve(program, 'benzamide')).toBe('[C][=C][C][=C][C][=C][Ring1][=Branch1][C][=O][N]')
+    })
+
+    test('should produce expected SMILES', () => {
+      const source = readProgram('pharmaceutical.selfies')
+      const program = parse(source)
+
+      const expectedSmiles = {
+        phenyl: 'C1=CC=CC=C1',
+        benzyl: 'CC1=CC=CC=C1',
+        hydroxyl: 'O',
+        carbonyl: 'O',
+        amino: 'N',
+        methyl: 'C',
+        ethyl: 'CC',
+        phenol: 'C1=CC=CC=C1O',
+        aniline: 'C1=CC=CC=C1N',
+        anisole: 'C1=CC=CC=C1OC',
+        acetophenone: 'C1=CC=CC=C1C=O',  // [phenyl][C][carbonyl][methyl] - methyl after =O
+        benzamide: 'C1=CC=CC=C1C=O',     // [phenyl][C][carbonyl][amino] - amino after =O
+      }
+
+      for (const [name, expected] of Object.entries(expectedSmiles)) {
+        expect(resolve(program, name, { decode: true })).toBe(expected)
+      }
     })
   })
 
@@ -314,6 +387,21 @@ describe('Fixture Programs', () => {
         const resolved = resolveAll(program)
         expect(resolved.size).toBe(program.definitions.size)
       })
+
+      test(`${filename} should decode all definitions to SMILES`, () => {
+        const source = readProgram(filename)
+        const program = parse(source)
+        // Definitions that are just control tokens (like ring closers) may produce empty SMILES
+        const controlTokenOnlyDefs = ['ring_closer', 'branch_unit']
+        for (const name of program.definitions.keys()) {
+          // Each definition should decode to a valid SMILES string
+          const smiles = resolve(program, name, { decode: true })
+          expect(typeof smiles).toBe('string')
+          if (!controlTokenOnlyDefs.includes(name)) {
+            expect(smiles.length).toBeGreaterThan(0)
+          }
+        }
+      })
     })
 
     // Fixtures with imports - use loadFile()
@@ -345,6 +433,83 @@ describe('Fixture Programs', () => {
         expect(resolved.size).toBeGreaterThan(0)
         expect(resolved.size).toBeGreaterThanOrEqual(program.definitions.size - 5)
       })
+
+      test(`${filename} should decode all definitions to SMILES`, () => {
+        const filepath = join(PROGRAMS_DIR, filename)
+        const program = loadFile(filepath)
+        for (const name of program.definitions.keys()) {
+          // Each definition should decode to a valid SMILES string
+          // Skip valence validation for compositional fragments that may have unusual bonding
+          const smiles = resolve(program, name, { decode: true, validateValence: false })
+          expect(typeof smiles).toBe('string')
+          expect(smiles.length).toBeGreaterThan(0)
+        }
+      })
+    })
+  })
+
+  // SMILES verification for pharma-core.selfies
+  describe('pharma-core.selfies SMILES verification', () => {
+    test('should produce expected SMILES for key fragments', () => {
+      const source = readProgram('pharma-core.selfies')
+      const program = parse(source)
+
+      const expectedSmiles = {
+        methyl: 'C',
+        ethyl: 'CC',
+        propyl: 'CCC',
+        butyl: 'CCCC',
+        hydroxyl: 'O',
+        amino: 'N',
+        thiol: 'S',
+        carbonyl: 'O',
+        carboxyl: 'C=O',    // [C][=O][O] - O connects after double bond
+        aldehyde: 'C=O',
+        cyano: 'C#N',
+        amide: 'C=O',       // [C][=O][N] - N connects after double bond
+        fluoro: 'F',
+        chloro: 'Cl',
+        bromo: 'Br',
+        iodo: 'I',
+        phenyl: 'C1=CC=CC=C1',
+        pyridine: 'N1=CC=CC=C1',
+        piperidine: 'N1CCCCC1',
+        cyclohexyl: 'C1CCCCC1',
+        ether: 'O',
+        thioether: 'S',
+        methylene: 'C',
+        ethylene: 'CC',
+      }
+
+      for (const [name, expected] of Object.entries(expectedSmiles)) {
+        expect(resolve(program, name, { decode: true })).toBe(expected)
+      }
+    })
+  })
+
+  // SMILES verification for pharma-candidates.selfies (with imports)
+  describe('pharma-candidates.selfies SMILES verification', () => {
+    test('should produce expected SMILES for drug-like molecules', () => {
+      const filepath = join(PROGRAMS_DIR, 'pharma-candidates.selfies')
+      const program = loadFile(filepath)
+
+      const expectedSmiles = {
+        methanol: 'CO',
+        ethanol: 'CCO',
+        propanol: 'CCCO',
+        methylamine: 'CN',
+        ethylamine: 'CCN',
+        toluene: 'CC1=CC=CC=C1',
+        phenol: 'C1=CC=CC=C1O',
+        aniline: 'C1=CC=CC=C1N',
+        biphenyl: 'C1=CC=CC=C1C2=CC=CC=C2',
+        phenethylamine: 'C1=CC=CC=C1CCN',
+        benzyl_alcohol: 'C1=CC=CC=C1CO',
+      }
+
+      for (const [name, expected] of Object.entries(expectedSmiles)) {
+        expect(resolve(program, name, { decode: true })).toBe(expected)
+      }
     })
   })
 
