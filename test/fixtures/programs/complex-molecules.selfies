@@ -19,7 +19,7 @@
 [styrene] = [phenyl][vinyl]
 
 # Cyclic molecules
-[cyclopropane] = [C][C][C][Ring1][C]
-[cyclobutane] = [C][C][C][C][Ring1][C]
+[cyclopropane] = [C][C][C][Ring1][Branch1]
+[cyclobutane] = [C][C][C][C][Ring1][Branch1]
 [cyclopentane] = [C][C][C][C][C][Ring1][Branch1]
 [cyclohexane] = [C][C][C][C][C][C][Ring1][Branch2]

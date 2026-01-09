@@ -11,7 +11,7 @@
 # Common groups
 [methyl] = [C_single]
 [ethyl] = [C_single][C_single]
-[carboxyl] = [C_single][double_bond_O][O_single]
+[carboxyl] = [C_single][=Branch1][C_single][double_bond_O][O_single]
 [amino] = [N_single]
 
 # Amino acid backbone

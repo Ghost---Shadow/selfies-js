@@ -36,23 +36,33 @@ describe('Fixture Programs', () => {
       const resolved = resolveAll(program)
 
       expect(resolved.size).toBe(program.definitions.size)
-      expect(resolved.get('methyl')).toBe('[C]')
-      expect(resolved.get('ethanol')).toBe('[C][C][O]')
-      expect(resolved.get('acetone')).toContain('[C]')
-      expect(resolved.get('acetone')).toContain('[=O]')
     })
 
-    test('should decode to valid SMILES', () => {
+    test('should produce expected SELFIES', () => {
       const source = readProgram('simple.selfies')
       const program = parse(source)
 
-      expect(resolve(program, 'methanol', { decode: true })).toBe('CO')
-      expect(resolve(program, 'ethanol', { decode: true })).toBe('CCO')
-      expect(resolve(program, 'propanol', { decode: true })).toBe('CCCO')
-      expect(resolve(program, 'acetone', { decode: true })).toBe('CC(=O)C')
+      const expectedSelfies = {
+        methyl: '[C]',
+        ethyl: '[C][C]',
+        propyl: '[C][C][C]',
+        butyl: '[C][C][C][C]',
+        hydroxyl: '[O]',
+        carbonyl: '[=O]',
+        amino: '[N]',
+        carboxyl: '[C][=Branch1][C][=O][O]',
+        methanol: '[C][O]',
+        ethanol: '[C][C][O]',
+        propanol: '[C][C][C][O]',
+        acetone: '[C][C][=Branch1][C][=O][C]',
+      }
+
+      for (const [name, expected] of Object.entries(expectedSelfies)) {
+        expect(resolve(program, name)).toBe(expected)
+      }
     })
 
-    test('should produce expected SMILES for all definitions', () => {
+    test('should produce expected SMILES', () => {
       const source = readProgram('simple.selfies')
       const program = parse(source)
 
@@ -120,18 +130,38 @@ describe('Fixture Programs', () => {
       expect(detectCycles(program)).toEqual([])
     })
 
-    test('should resolve hierarchical definitions', () => {
+    test('should produce expected SELFIES', () => {
       const source = readProgram('amino-acids.selfies')
       const program = parse(source)
 
-      const glycine = resolve(program, 'glycine')
-      expect(glycine).toContain('[N]')
-      expect(glycine).toContain('[C]')
-      expect(glycine).toContain('[O]')
+      const expectedSelfies = {
+        amino: '[N]',
+        carboxyl: '[C][=Branch1][C][=O][O]',
+        methyl: '[C]',
+        glycine: '[N][C][C][=Branch1][C][=O][O]',
+        alanine: '[N][C][Branch1][C][C][C][=Branch1][C][=O][O]',
+      }
 
-      const alanine = resolve(program, 'alanine')
-      expect(alanine).toContain('[N]')
-      expect(alanine).toContain('[Branch1]')
+      for (const [name, expected] of Object.entries(expectedSelfies)) {
+        expect(resolve(program, name)).toBe(expected)
+      }
+    })
+
+    test('should produce expected SMILES', () => {
+      const source = readProgram('amino-acids.selfies')
+      const program = parse(source)
+
+      const expectedSmiles = {
+        amino: 'N',
+        carboxyl: 'C(=O)O',
+        methyl: 'C',
+        glycine: 'NCC(=O)O',
+        alanine: 'NC(C)C(=O)O',
+      }
+
+      for (const [name, expected] of Object.entries(expectedSmiles)) {
+        expect(resolve(program, name, { decode: true })).toBe(expected)
+      }
     })
   })
 
@@ -143,23 +173,24 @@ describe('Fixture Programs', () => {
       expect(program.errors).toEqual([])
     })
 
-    test('should handle branched structures', () => {
+    test('should produce expected SELFIES', () => {
       const source = readProgram('complex-molecules.selfies')
       const program = parse(source)
 
-      const isobutane = resolve(program, 'isobutane')
-      expect(isobutane).toContain('[Branch1]')
-    })
+      const expectedSelfies = {
+        methyl: '[C]',
+        ethyl: '[C][C]',
+        vinyl: '[C][=C]',
+        benzene: '[C][=C][C][=C][C][=C][Ring1][=Branch1]',
+        phenyl: '[C][=C][C][=C][C][=C][Ring1][=Branch1]',
+        cyclopropane: '[C][C][C][Ring1][Branch1]',
+        cyclobutane: '[C][C][C][C][Ring1][Branch1]',
+        cyclohexane: '[C][C][C][C][C][C][Ring1][Branch2]',
+      }
 
-    test('should handle ring structures', () => {
-      const source = readProgram('complex-molecules.selfies')
-      const program = parse(source)
-
-      const benzene = resolve(program, 'benzene')
-      expect(benzene).toContain('[Ring1]')
-
-      const cyclohexane = resolve(program, 'cyclohexane')
-      expect(cyclohexane).toContain('[Ring1]')
+      for (const [name, expected] of Object.entries(expectedSelfies)) {
+        expect(resolve(program, name)).toBe(expected)
+      }
     })
 
     test('should produce expected SMILES', () => {
@@ -176,6 +207,8 @@ describe('Fixture Programs', () => {
         phenyl: 'C1=CC=CC=C1',
         toluene: 'C1=CC=CC=C1C',
         styrene: 'C1=CC=CC=C1C=C',
+        cyclopropane: 'C1CC1',
+        cyclobutane: 'C1CCC1',
         cyclopentane: 'C1CCCC1',
         cyclohexane: 'C1CCCCC1',
       }
@@ -254,13 +287,24 @@ describe('Fixture Programs', () => {
       expect(program.definitions.size).toBeGreaterThan(15)
     })
 
-    test('should resolve pharma fragments', () => {
+    test('should produce expected SELFIES', () => {
       const source = readProgram('pharmaceutical.selfies')
       const program = parse(source)
 
-      expect(resolve(program, 'phenol')).toBe('[C][=C][C][=C][C][=C][Ring1][=Branch1][O]')
-      expect(resolve(program, 'aniline')).toBe('[C][=C][C][=C][C][=C][Ring1][=Branch1][N]')
-      expect(resolve(program, 'benzamide')).toBe('[C][=C][C][=C][C][=C][Ring1][=Branch1][C][=Branch1][C][=O][N]')
+      const expectedSelfies = {
+        phenyl: '[C][=C][C][=C][C][=C][Ring1][=Branch1]',
+        hydroxyl: '[O]',
+        carbonyl: '[=O]',
+        amino: '[N]',
+        methyl: '[C]',
+        phenol: '[C][=C][C][=C][C][=C][Ring1][=Branch1][O]',
+        aniline: '[C][=C][C][=C][C][=C][Ring1][=Branch1][N]',
+        benzamide: '[C][=C][C][=C][C][=C][Ring1][=Branch1][C][=Branch1][C][=O][N]',
+      }
+
+      for (const [name, expected] of Object.entries(expectedSelfies)) {
+        expect(resolve(program, name)).toBe(expected)
+      }
     })
 
     test('should produce expected SMILES', () => {
@@ -275,11 +319,18 @@ describe('Fixture Programs', () => {
         amino: 'N',
         methyl: 'C',
         ethyl: 'CC',
+        methoxy: 'OC',
+        nitro: 'N(O)=O',
+        pyridine: 'N1=CC=CC=C1',
+        furan: 'O1C=CC=C1',
+        thiophene: 'S1C=CC=C1',
         phenol: 'C1=CC=CC=C1O',
         aniline: 'C1=CC=CC=C1N',
         anisole: 'C1=CC=CC=C1OC',
         acetophenone: 'C1=CC=CC=C1C(=O)C',
         benzamide: 'C1=CC=CC=C1C(=O)N',
+        salicylic_acid: 'C1=CC=CC=C1OC(=O)O',
+        acetyl_group: 'C(=O)C',
       }
 
       for (const [name, expected] of Object.entries(expectedSmiles)) {
@@ -296,12 +347,47 @@ describe('Fixture Programs', () => {
       expect(program.errors).toEqual([])
     })
 
-    test('should resolve polymer units', () => {
+    test('should produce expected SELFIES', () => {
       const source = readProgram('polymers.selfies')
       const program = parse(source)
 
-      expect(resolve(program, 'PE_unit')).toBe('[C][C]')
-      expect(resolve(program, 'PS_unit')).toContain('[Branch1]')
+      const expectedSelfies = {
+        phenyl: '[C][=C][C][=C][C][=C][Ring1][=Branch1]',
+        hydroxyl: '[O]',
+        carbonyl: '[=O]',
+        carboxyl: '[C][=Branch1][C][=O][O]',
+        ethylene: '[C][=C]',
+        PE_unit: '[C][C]',
+        PP_unit: '[C][C][Branch1][C][C]',
+        PVC_unit: '[C][C][Branch1][C][Cl]',
+      }
+
+      for (const [name, expected] of Object.entries(expectedSelfies)) {
+        expect(resolve(program, name)).toBe(expected)
+      }
+    })
+
+    test('should produce expected SMILES', () => {
+      const source = readProgram('polymers.selfies')
+      const program = parse(source)
+
+      const expectedSmiles = {
+        phenyl: 'C1=CC=CC=C1',
+        hydroxyl: 'O',
+        carbonyl: 'O',
+        carboxyl: 'C(=O)O',
+        ethylene: 'C=C',
+        propylene: 'C=CC',
+        PE_unit: 'CC',
+        PP_unit: 'CCC',
+        PS_unit: 'CC(C1)=CC=CC=C1',
+        PVC_unit: 'CCCl',
+        PMMA_unit: 'CC(C)=O',
+      }
+
+      for (const [name, expected] of Object.entries(expectedSmiles)) {
+        expect(resolve(program, name, { decode: true })).toBe(expected)
+      }
     })
   })
 
@@ -313,12 +399,25 @@ describe('Fixture Programs', () => {
       expect(program.errors).toEqual([])
     })
 
+    test('should produce expected SMILES for valid definitions', () => {
+      const source = readProgram('undefined-refs.selfies')
+      const program = parse(source)
+
+      const expectedSmiles = {
+        methyl: 'C',
+        ethyl: 'CC',
+      }
+
+      for (const [name, expected] of Object.entries(expectedSmiles)) {
+        expect(resolve(program, name, { decode: true })).toBe(expected)
+      }
+    })
+
     test('should treat undefined references as primitives', () => {
       const source = readProgram('undefined-refs.selfies')
       const program = parse(source)
 
       // Undefined names are treated as primitive SELFIES tokens (could be valid)
-      // compound1 uses [undefined_group] which gets passed through as-is
       // Skip valence validation since these contain undefined tokens
       const result1 = resolve(program, 'compound1', { validateValence: false })
       expect(result1).toContain('[undefined_group]')
@@ -328,14 +427,6 @@ describe('Fixture Programs', () => {
 
       const result3 = resolve(program, 'compound3', { validateValence: false })
       expect(result3).toContain('[unknown1]')
-    })
-
-    test('should resolve valid definitions', () => {
-      const source = readProgram('undefined-refs.selfies')
-      const program = parse(source)
-
-      expect(resolve(program, 'methyl')).toBe('[C]')
-      expect(resolve(program, 'ethyl')).toBe('[C][C]')
     })
   })
 
@@ -448,9 +539,46 @@ describe('Fixture Programs', () => {
     })
   })
 
-  // SMILES verification for pharma-core.selfies
-  describe('pharma-core.selfies SMILES verification', () => {
-    test('should produce expected SMILES for key fragments', () => {
+  // Verification for pharma-core.selfies
+  describe('pharma-core.selfies verification', () => {
+    test('should produce expected SELFIES', () => {
+      const source = readProgram('pharma-core.selfies')
+      const program = parse(source)
+
+      const expectedSelfies = {
+        methyl: '[C]',
+        ethyl: '[C][C]',
+        propyl: '[C][C][C]',
+        butyl: '[C][C][C][C]',
+        hydroxyl: '[O]',
+        amino: '[N]',
+        thiol: '[S]',
+        carbonyl: '[=O]',
+        carboxyl: '[C][=Branch1][C][=O][O]',
+        aldehyde: '[C][=O]',
+        nitro: '[N][Branch1][C][O][=O]',
+        cyano: '[C][#N]',
+        amide: '[C][=Branch1][C][=O][N]',
+        fluoro: '[F]',
+        chloro: '[Cl]',
+        bromo: '[Br]',
+        iodo: '[I]',
+        phenyl: '[C][=C][C][=C][C][=C][Ring1][=Branch1]',
+        piperidine: '[N][C][C][C][C][C][Ring1][=Branch1]',
+        sulfonyl: '[S][=Branch1][C][=O][=O]',
+        sulfonamide: '[S][=Branch1][C][=O][=Branch1][C][=O][N]',
+        ether: '[O]',
+        thioether: '[S]',
+        methylene: '[C]',
+        ethylene: '[C][C]',
+      }
+
+      for (const [name, expected] of Object.entries(expectedSelfies)) {
+        expect(resolve(program, name)).toBe(expected)
+      }
+    })
+
+    test('should produce expected SMILES', () => {
       const source = readProgram('pharma-core.selfies')
       const program = parse(source)
 
@@ -490,9 +618,30 @@ describe('Fixture Programs', () => {
     })
   })
 
-  // SMILES verification for pharma-candidates.selfies (with imports)
-  describe('pharma-candidates.selfies SMILES verification', () => {
-    test('should produce expected SMILES for drug-like molecules', () => {
+  // Verification for pharma-candidates.selfies (with imports)
+  describe('pharma-candidates.selfies verification', () => {
+    test('should produce expected SELFIES', () => {
+      const filepath = join(PROGRAMS_DIR, 'pharma-candidates.selfies')
+      const program = loadFile(filepath)
+
+      const expectedSelfies = {
+        methanol: '[C][O]',
+        ethanol: '[C][C][O]',
+        propanol: '[C][C][C][O]',
+        methylamine: '[C][N]',
+        ethylamine: '[C][C][N]',
+        toluene: '[C][C][=C][C][=C][C][=C][Ring1][=Branch1]',
+        phenol: '[C][=C][C][=C][C][=C][Ring1][=Branch1][O]',
+        aniline: '[C][=C][C][=C][C][=C][Ring1][=Branch1][N]',
+        benzyl_alcohol: '[C][=C][C][=C][C][=C][Ring1][=Branch1][C][O]',
+      }
+
+      for (const [name, expected] of Object.entries(expectedSelfies)) {
+        expect(resolve(program, name)).toBe(expected)
+      }
+    })
+
+    test('should produce expected SMILES', () => {
       const filepath = join(PROGRAMS_DIR, 'pharma-candidates.selfies')
       const program = loadFile(filepath)
 

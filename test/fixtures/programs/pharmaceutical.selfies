@@ -18,7 +18,7 @@
 [tert_butyl] = [C][Branch1][C][methyl][Branch1][C][methyl][methyl]
 
 # Heterocycles
-[pyridine] = [N][=C][C][=C][C][=C][Ring1][Branch1]
+[pyridine] = [N][=C][C][=C][C][=C][Ring1][=Branch1]
 [furan] = [O][C][=C][C][=C][Ring1][Branch1]
 [thiophene] = [S][C][=C][C][=C][Ring1][Branch1]
 

@@ -8,7 +8,7 @@
 [methoxy] = [O][C]
 [hydroxyl] = [O]
 [carbonyl] = [=O]
-[carboxyl] = [C][carbonyl][hydroxyl]
+[carboxyl] = [C][=Branch1][C][carbonyl][hydroxyl]
 [ester] = [C][carbonyl][O]
 
 # Monomers
