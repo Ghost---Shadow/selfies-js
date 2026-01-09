@@ -94,4 +94,4 @@ import "./pharma-core.selfies"
 [phenethylamine] = [phenyl][ethyl][amino]
 
 # Benzoyl group compositions
-[acetophenone] = [phenyl][methyl][carbonyl]
+[acetophenone] = [phenyl][C][=Branch1][C][=O][methyl]

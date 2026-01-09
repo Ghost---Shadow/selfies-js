@@ -20,11 +20,11 @@
 [amino] = [N]
 [thiol] = [S]
 [carbonyl] = [=O]
-[carboxyl] = [C][=O][O]
+[carboxyl] = [C][=Branch1][C][=O][O]
 [aldehyde] = [C][=O]
-[nitro] = [N+][Branch1][C][=O][O-]
+[nitro] = [N][Branch1][C][O][=O]
 [cyano] = [C][#N]
-[amide] = [C][=O][N]
+[amide] = [C][=Branch1][C][=O][N]
 
 # ═══════════════════════════════════════════════════════════════
 #  HALOGENS
@@ -64,9 +64,9 @@
 #  SULFONYL GROUPS
 # ═══════════════════════════════════════════════════════════════
 
-[sulfonyl] = [S][=O][=O]
-[sulfonamide] = [S][=O][=O][N]
-[sulfone] = [S][=O][=O]
+[sulfonyl] = [S][=Branch1][C][=O][=O]
+[sulfonamide] = [S][=Branch1][C][=O][=Branch1][C][=O][N]
+[sulfone] = [S][=Branch1][C][=O][=O]
 
 # ═══════════════════════════════════════════════════════════════
 #  LINKERS

@@ -9,7 +9,7 @@
 [carbonyl] = [=O]
 [amino] = [N]
 [methoxy] = [O][C]
-[nitro] = [N+][Branch1][C][=O][O-]
+[nitro] = [N][Branch1][C][O][=O]
 
 # Common substituents
 [methyl] = [C]
@@ -26,9 +26,9 @@
 [phenol] = [phenyl][hydroxyl]
 [aniline] = [phenyl][amino]
 [anisole] = [phenyl][methoxy]
-[acetophenone] = [phenyl][C][carbonyl][methyl]
-[benzamide] = [phenyl][C][carbonyl][amino]
+[acetophenone] = [phenyl][C][=Branch1][C][=O][methyl]
+[benzamide] = [phenyl][C][=Branch1][C][=O][amino]
 
 # Aspirin-like structure (simplified)
-[salicylic_acid] = [phenyl][hydroxyl][C][carbonyl][hydroxyl]
-[acetyl_group] = [C][carbonyl][methyl]
+[salicylic_acid] = [phenyl][hydroxyl][C][=Branch1][C][=O][hydroxyl]
+[acetyl_group] = [C][=Branch1][C][=O][methyl]

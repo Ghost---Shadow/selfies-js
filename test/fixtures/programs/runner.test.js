@@ -49,7 +49,7 @@ describe('Fixture Programs', () => {
       expect(resolve(program, 'methanol', { decode: true })).toBe('CO')
       expect(resolve(program, 'ethanol', { decode: true })).toBe('CCO')
       expect(resolve(program, 'propanol', { decode: true })).toBe('CCCO')
-      expect(resolve(program, 'acetone', { decode: true })).toBe('CC=O')
+      expect(resolve(program, 'acetone', { decode: true })).toBe('CC(=O)C')
     })
 
     test('should produce expected SMILES for all definitions', () => {
@@ -64,11 +64,11 @@ describe('Fixture Programs', () => {
         hydroxyl: 'O',
         carbonyl: 'O',
         amino: 'N',
-        carboxyl: 'C=O',
+        carboxyl: 'C(=O)O',
         methanol: 'CO',
         ethanol: 'CCO',
         propanol: 'CCCO',
-        acetone: 'CC=O',
+        acetone: 'CC(=O)C',
       }
 
       for (const [name, expected] of Object.entries(expectedSmiles)) {
@@ -260,7 +260,7 @@ describe('Fixture Programs', () => {
 
       expect(resolve(program, 'phenol')).toBe('[C][=C][C][=C][C][=C][Ring1][=Branch1][O]')
       expect(resolve(program, 'aniline')).toBe('[C][=C][C][=C][C][=C][Ring1][=Branch1][N]')
-      expect(resolve(program, 'benzamide')).toBe('[C][=C][C][=C][C][=C][Ring1][=Branch1][C][=O][N]')
+      expect(resolve(program, 'benzamide')).toBe('[C][=C][C][=C][C][=C][Ring1][=Branch1][C][=Branch1][C][=O][N]')
     })
 
     test('should produce expected SMILES', () => {
@@ -278,8 +278,8 @@ describe('Fixture Programs', () => {
         phenol: 'C1=CC=CC=C1O',
         aniline: 'C1=CC=CC=C1N',
         anisole: 'C1=CC=CC=C1OC',
-        acetophenone: 'C1=CC=CC=C1C=O',  // [phenyl][C][carbonyl][methyl] - methyl after =O
-        benzamide: 'C1=CC=CC=C1C=O',     // [phenyl][C][carbonyl][amino] - amino after =O
+        acetophenone: 'C1=CC=CC=C1C(=O)C',
+        benzamide: 'C1=CC=CC=C1C(=O)N',
       }
 
       for (const [name, expected] of Object.entries(expectedSmiles)) {
@@ -463,10 +463,11 @@ describe('Fixture Programs', () => {
         amino: 'N',
         thiol: 'S',
         carbonyl: 'O',
-        carboxyl: 'C=O',    // [C][=O][O] - O connects after double bond
+        carboxyl: 'C(=O)O',
         aldehyde: 'C=O',
+        nitro: 'N(O)=O',
         cyano: 'C#N',
-        amide: 'C=O',       // [C][=O][N] - N connects after double bond
+        amide: 'C(=O)N',
         fluoro: 'F',
         chloro: 'Cl',
         bromo: 'Br',
@@ -475,6 +476,8 @@ describe('Fixture Programs', () => {
         pyridine: 'N1=CC=CC=C1',
         piperidine: 'N1CCCCC1',
         cyclohexyl: 'C1CCCCC1',
+        sulfonyl: 'S(=O)=O',
+        sulfonamide: 'S(=O)(=O)N',
         ether: 'O',
         thioether: 'S',
         methylene: 'C',

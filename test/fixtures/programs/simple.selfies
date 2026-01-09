@@ -10,7 +10,7 @@
 [hydroxyl] = [O]
 [carbonyl] = [=O]
 [amino] = [N]
-[carboxyl] = [C][=O][O]
+[carboxyl] = [C][=Branch1][C][=O][O]
 
 # Simple alcohols
 [methanol] = [methyl][hydroxyl]
@@ -18,4 +18,4 @@
 [propanol] = [propyl][hydroxyl]
 
 # Ketones
-[acetone] = [methyl][C][carbonyl][methyl]
+[acetone] = [methyl][C][=Branch1][C][=O][methyl]
