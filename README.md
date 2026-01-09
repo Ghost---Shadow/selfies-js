@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="toluene-logo.svg" alt="Toluene molecule" width="200"/>
+  <img src="icon.svg" alt="Toluene molecule" width="200"/>
   <h1>selfies-js</h1>
   <p><strong>Molecular fragments as reusable code.</strong></p>
 </div>
