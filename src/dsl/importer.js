@@ -27,7 +27,7 @@ import { parse } from './parser.js'
 export function parseImports(source, currentFilePath) {
   const imports = []
   const lines = source.split('\n')
-  const nonImportLines = []
+  const processedLines = []
 
   // Match: import [names] from "path"  OR  import * from "path"  OR  import "path"
   const importWithNamesRegex = /^import\s+\[([^\]]+)\]\s+from\s+['"]([^'"]+)['"]/
@@ -39,7 +39,7 @@ export function parseImports(source, currentFilePath) {
 
     // Skip empty lines and comments for import matching
     if (!trimmed.startsWith('import')) {
-      nonImportLines.push(line)
+      processedLines.push(line)
       continue
     }
 
@@ -62,7 +62,7 @@ export function parseImports(source, currentFilePath) {
       relativeFilePath = match[1]
     } else {
       // Not a valid import line, keep it
-      nonImportLines.push(line)
+      processedLines.push(line)
       continue
     }
 
@@ -77,11 +77,14 @@ export function parseImports(source, currentFilePath) {
       filePath: absoluteFilePath,
       originalPath: relativeFilePath
     })
+
+    // Replace import line with blank line to preserve line numbers
+    processedLines.push('')
   }
 
   return {
     imports,
-    sourceWithoutImports: nonImportLines.join('\n')
+    sourceWithoutImports: processedLines.join('\n')
   }
 }
 
