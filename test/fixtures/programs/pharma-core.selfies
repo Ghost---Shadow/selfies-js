@@ -1,0 +1,79 @@
+# Pharma Core Fragment Library
+# Common building blocks for pharmaceutical compounds
+
+# ═══════════════════════════════════════════════════════════════
+#  ALKYL GROUPS
+# ═══════════════════════════════════════════════════════════════
+
+[methyl] = [C]
+[ethyl] = [C][C]
+[propyl] = [C][C][C]
+[butyl] = [C][C][C][C]
+[isopropyl] = [C][Branch1][C][C][C]
+[tert_butyl] = [C][Branch1][C][C][Branch1][C][C][C]
+
+# ═══════════════════════════════════════════════════════════════
+#  FUNCTIONAL GROUPS
+# ═══════════════════════════════════════════════════════════════
+
+[hydroxyl] = [O]
+[amino] = [N]
+[thiol] = [S]
+[carbonyl] = [=O]
+[carboxyl] = [C][=O][O]
+[aldehyde] = [C][=O]
+[nitro] = [N+][Branch1][C][=O][O-]
+[cyano] = [C][#N]
+[amide] = [C][=O][N]
+
+# ═══════════════════════════════════════════════════════════════
+#  HALOGENS
+# ═══════════════════════════════════════════════════════════════
+
+[fluoro] = [F]
+[chloro] = [Cl]
+[bromo] = [Br]
+[iodo] = [I]
+[trifluoromethyl] = [C][Branch1][C][F][Branch1][C][F][F]
+
+# ═══════════════════════════════════════════════════════════════
+#  AROMATIC RINGS
+# ═══════════════════════════════════════════════════════════════
+
+[phenyl] = [C][=C][C][=C][C][=C][Ring1][=Branch1]
+[pyridine] = [N][=C][C][=C][C][=C][Ring1][=Branch1]
+[pyrimidine] = [N][=C][N][=C][C][=C][Ring1][=Branch1]
+[furan] = [O][C][=C][C][=C][Ring1][Branch1]
+[thiophene] = [S][C][=C][C][=C][Ring1][Branch1]
+[pyrrole] = [N][C][=C][C][=C][Ring1][Branch1]
+[imidazole] = [N][C][=N][C][=C][Ring1][Branch1]
+
+# ═══════════════════════════════════════════════════════════════
+#  SATURATED RINGS
+# ═══════════════════════════════════════════════════════════════
+
+[cyclopropyl] = [C][C][C][Ring1][Branch1]
+[cyclopentyl] = [C][C][C][C][C][Ring1][Branch1]
+[cyclohexyl] = [C][C][C][C][C][C][Ring1][=Branch1]
+[piperidine] = [N][C][C][C][C][C][Ring1][=Branch1]
+[piperazine] = [N][C][C][N][C][C][Ring1][=Branch1]
+[morpholine] = [O][C][C][N][C][C][Ring1][=Branch1]
+[pyrrolidine] = [N][C][C][C][C][Ring1][Branch1]
+
+# ═══════════════════════════════════════════════════════════════
+#  SULFONYL GROUPS
+# ═══════════════════════════════════════════════════════════════
+
+[sulfonyl] = [S][=O][=O]
+[sulfonamide] = [S][=O][=O][N]
+[sulfone] = [S][=O][=O]
+
+# ═══════════════════════════════════════════════════════════════
+#  LINKERS
+# ═══════════════════════════════════════════════════════════════
+
+[ether] = [O]
+[thioether] = [S]
+[secondary_amine] = [N]
+[methylene] = [C]
+[ethylene] = [C][C]

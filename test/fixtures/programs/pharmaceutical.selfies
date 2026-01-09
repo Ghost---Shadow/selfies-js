@@ -9,7 +9,7 @@
 [carbonyl] = [=O]
 [amino] = [N]
 [methoxy] = [O][C]
-[nitro] = [N][=Branch1][C][=O][=O]
+[nitro] = [N+][Branch1][C][=O][O-]
 
 # Common substituents
 [methyl] = [C]

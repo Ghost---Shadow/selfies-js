@@ -1,0 +1,16 @@
+# Diamond Import Test
+# Tests importing the same base through multiple paths
+#
+#      main
+#      /  \
+#   left  right
+#      \  /
+#      base
+#
+# base.selfies should only be loaded once
+
+import "./diamond-left.selfies"
+import "./diamond-right.selfies"
+
+# Uses fragments that both depend on base
+[diamond_composed] = [left_frag][right_frag]

@@ -1,0 +1,72 @@
+# Naming Edge Cases Test Suite
+# Tests parser handling of various valid identifier patterns
+
+# ═══════════════════════════════════════════════════════════════
+#  CASE SENSITIVITY
+# ═══════════════════════════════════════════════════════════════
+
+[a] = [C]
+[A] = [N]
+[case_test] = [a][A]
+
+[methyl] = [C]
+[Methyl] = [N]
+[METHYL] = [O]
+[case_mix] = [methyl][Methyl][METHYL]
+
+# ═══════════════════════════════════════════════════════════════
+#  UNDERSCORE PATTERNS
+# ═══════════════════════════════════════════════════════════════
+
+[_leading] = [C]
+[trailing_] = [N]
+[_both_] = [O]
+[__double__] = [S]
+[a_b_c_d_e] = [C]
+
+# ═══════════════════════════════════════════════════════════════
+#  NUMBERS IN NAMES
+# ═══════════════════════════════════════════════════════════════
+
+[carbon1] = [C]
+[carbon2] = [C]
+[carbon12] = [carbon1][carbon2]
+[h2o] = [O]
+[c6h12o6] = [C][C][C][C][C][C][O][O][O][O][O][O]
+
+# ═══════════════════════════════════════════════════════════════
+#  NAMING STYLES
+# ═══════════════════════════════════════════════════════════════
+
+[camelCase] = [C]
+[PascalCase] = [N]
+[snake_case] = [O]
+[SCREAMING_SNAKE] = [S]
+[kebabNotAllowed] = [C]
+
+# ═══════════════════════════════════════════════════════════════
+#  SINGLE CHARACTER NAMES
+# ═══════════════════════════════════════════════════════════════
+
+[x] = [C]
+[y] = [N]
+[z] = [O]
+[xyz] = [x][y][z]
+
+# ═══════════════════════════════════════════════════════════════
+#  LONG NAMES
+# ═══════════════════════════════════════════════════════════════
+
+[this_is_a_very_long_fragment_name_that_should_still_work] = [C]
+[AnotherVeryLongNameButInCamelCaseStyle] = [N]
+[composed_from_long_names] = [this_is_a_very_long_fragment_name_that_should_still_work][AnotherVeryLongNameButInCamelCaseStyle]
+
+# ═══════════════════════════════════════════════════════════════
+#  NAMES THAT LOOK LIKE KEYWORDS (but aren't)
+# ═══════════════════════════════════════════════════════════════
+
+[import_like] = [C]
+[from_like] = [N]
+[def] = [O]
+[class] = [S]
+[return] = [F]

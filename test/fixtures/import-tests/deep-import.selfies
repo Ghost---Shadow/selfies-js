@@ -1,0 +1,11 @@
+# Multi-level Import Test
+# Tests importing from a file that itself imports
+
+import "./intermediate.selfies"
+
+# Uses fragments from intermediate.selfies which imports base.selfies
+[deep_ethanol] = [ethyl][hydroxyl]
+[deep_propanol] = [propyl][hydroxyl]
+
+# Uses fragments defined in intermediate.selfies
+[composed_alcohol] = [alcohol_base][methyl]

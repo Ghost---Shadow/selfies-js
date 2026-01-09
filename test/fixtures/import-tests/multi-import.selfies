@@ -1,0 +1,9 @@
+# Multiple Imports Test
+# Tests importing from multiple files
+
+import "./base.selfies"
+import "./intermediate.selfies"
+
+# Can use fragments from both files
+[multi_test1] = [methyl][hydroxyl]
+[multi_test2] = [alcohol_base][ethyl]

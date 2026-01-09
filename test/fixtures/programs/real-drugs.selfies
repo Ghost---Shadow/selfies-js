@@ -1,0 +1,96 @@
+# Real Drug Molecules Test Suite
+# Tests composition of actual pharmaceutical compounds
+
+import "./pharma-core.selfies"
+
+# ═══════════════════════════════════════════════════════════════
+#  SIMPLE ALCOHOLS
+# ═══════════════════════════════════════════════════════════════
+
+[methanol] = [methyl][hydroxyl]
+[ethanol] = [ethyl][hydroxyl]
+[isopropanol] = [isopropyl][hydroxyl]
+
+# ═══════════════════════════════════════════════════════════════
+#  SIMPLE AMINES
+# ═══════════════════════════════════════════════════════════════
+
+[methylamine] = [methyl][amino]
+[dimethylamine] = [methyl][amino][methyl]
+[trimethylamine] = [methyl][Branch1][C][methyl][amino][methyl]
+
+# ═══════════════════════════════════════════════════════════════
+#  CARBOXYLIC ACIDS
+# ═══════════════════════════════════════════════════════════════
+
+[formic_acid] = [carboxyl]
+[acetic_acid] = [methyl][carboxyl]
+[propionic_acid] = [ethyl][carboxyl]
+[butyric_acid] = [propyl][carboxyl]
+
+# ═══════════════════════════════════════════════════════════════
+#  AROMATIC COMPOUNDS
+# ═══════════════════════════════════════════════════════════════
+
+[toluene] = [methyl][phenyl]
+[phenol] = [phenyl][hydroxyl]
+[aniline] = [phenyl][amino]
+[benzoic_acid] = [phenyl][carboxyl]
+[benzaldehyde] = [phenyl][aldehyde]
+
+# ═══════════════════════════════════════════════════════════════
+#  HALOGENATED AROMATICS
+# ═══════════════════════════════════════════════════════════════
+
+[fluorobenzene] = [fluoro][phenyl]
+[chlorobenzene] = [chloro][phenyl]
+[bromobenzene] = [bromo][phenyl]
+[iodobenzene] = [iodo][phenyl]
+
+# ═══════════════════════════════════════════════════════════════
+#  DRUG-LIKE SCAFFOLDS
+# ═══════════════════════════════════════════════════════════════
+
+[phenyl_piperidine] = [phenyl][piperidine]
+[phenyl_piperazine] = [phenyl][piperazine]
+[phenyl_morpholine] = [phenyl][morpholine]
+[phenyl_pyrrolidine] = [phenyl][pyrrolidine]
+
+# ═══════════════════════════════════════════════════════════════
+#  SULFONAMIDES (antibiotic scaffold)
+# ═══════════════════════════════════════════════════════════════
+
+[phenyl_sulfonamide] = [phenyl][sulfonamide]
+[methyl_sulfonamide] = [methyl][sulfonamide]
+
+# ═══════════════════════════════════════════════════════════════
+#  FLUORINATED DRUG SCAFFOLDS
+# ═══════════════════════════════════════════════════════════════
+
+[trifluoromethyl_phenyl] = [trifluoromethyl][phenyl]
+[fluorophenyl_piperazine] = [fluoro][phenyl][piperazine]
+
+# ═══════════════════════════════════════════════════════════════
+#  HETEROCYCLIC DRUGS
+# ═══════════════════════════════════════════════════════════════
+
+[methyl_pyridine] = [methyl][pyridine]
+[phenyl_imidazole] = [phenyl][imidazole]
+[methyl_thiophene] = [methyl][thiophene]
+[methyl_furan] = [methyl][furan]
+
+# ═══════════════════════════════════════════════════════════════
+#  MULTI-RING SYSTEMS
+# ═══════════════════════════════════════════════════════════════
+
+[biphenyl] = [phenyl][phenyl]
+[phenyl_pyridine] = [phenyl][pyridine]
+[diphenyl_ether] = [phenyl][ether][phenyl]
+
+# ═══════════════════════════════════════════════════════════════
+#  NAMED DRUG FRAGMENTS
+# ═══════════════════════════════════════════════════════════════
+
+[phenethylamine] = [phenyl][ethyl][amino]
+[benzyl_alcohol] = [phenyl][methyl][hydroxyl]
+[acetophenone] = [methyl][carbonyl][phenyl]

@@ -1,0 +1,4 @@
+# Diamond Left Branch
+import "./base.selfies"
+
+[left_frag] = [methyl][O]

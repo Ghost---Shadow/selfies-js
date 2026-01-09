@@ -2,3 +2,4 @@
 import "./base.selfies"
 
 [propyl] = [C][C][C]
+[alcohol_base] = [C][hydroxyl]

@@ -1,0 +1,12 @@
+# Selective Import with Composition Test
+# Tests that selective imports work with composition
+
+import [methyl, ethyl] from "./base.selfies"
+
+# These should work
+[dimethyl] = [methyl][methyl]
+[diethyl] = [ethyl][ethyl]
+[methyl_ethyl] = [methyl][ethyl]
+
+# This would fail (hydroxyl not imported):
+# [methanol] = [methyl][hydroxyl]

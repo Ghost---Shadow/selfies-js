@@ -1,14 +1,21 @@
 # Polymer repeat units
 # Building blocks for common polymers
 
+# Aromatic base (defined first since monomers use it)
+[phenyl] = [C][=C][C][=C][C][=C][Ring1][=Branch1]
+
+# Common groups (defined before they're used)
+[methoxy] = [O][C]
+[hydroxyl] = [O]
+[carbonyl] = [=O]
+[carboxyl] = [C][carbonyl][hydroxyl]
+[ester] = [C][carbonyl][O]
+
 # Monomers
 [ethylene] = [C][=C]
 [propylene] = [C][=C][C]
 [styrene_monomer] = [C][=C][phenyl]
 [vinyl_chloride] = [C][=C][Cl]
-
-# Aromatic base
-[phenyl] = [C][=C][C][=C][C][=C][Ring1][=Branch1]
 
 # Saturated repeat units (after polymerization)
 [PE_unit] = [C][C]
@@ -20,13 +27,6 @@
 [PMMA_unit] = [C][C][Branch1][C][C][carbonyl][methoxy]
 [PVA_unit] = [C][C][Branch1][C][hydroxyl]
 
-# Common groups
-[methoxy] = [O][C]
-[hydroxyl] = [O]
-[carbonyl] = [=O]
-[ester] = [C][carbonyl][O]
-
 # Polyester building blocks
 [ethylene_glycol] = [C][C][hydroxyl][hydroxyl]
 [terephthalic_acid] = [phenyl][carboxyl][carboxyl]
-[carboxyl] = [C][carbonyl][hydroxyl]

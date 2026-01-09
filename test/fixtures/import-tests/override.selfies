@@ -1,0 +1,10 @@
+# Import Override Test
+# Tests what happens when imported names conflict with local definitions
+
+import "./base.selfies"
+
+# Override an imported definition
+[methyl] = [N]
+
+# This should use the local [methyl] = [N], not the imported [C]
+[override_test] = [methyl][hydroxyl]

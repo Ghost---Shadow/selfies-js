@@ -1,0 +1,68 @@
+# Reuse Patterns Test Suite
+# Tests that the same fragment can be reused multiple times
+
+# ═══════════════════════════════════════════════════════════════
+#  SAME FRAGMENT MULTIPLE TIMES IN ONE DEFINITION
+# ═══════════════════════════════════════════════════════════════
+
+[m] = [C]
+[methyl] = [C]
+
+[ethane] = [m][m]
+[propane] = [m][m][m]
+[butane] = [m][m][m][m]
+[pentane] = [m][m][m][m][m]
+[hexane] = [m][m][m][m][m][m]
+
+# ═══════════════════════════════════════════════════════════════
+#  REUSE ACROSS MULTIPLE DEFINITIONS
+# ═══════════════════════════════════════════════════════════════
+
+[oh] = [O]
+
+[methanol] = [m][oh]
+[ethanol] = [m][m][oh]
+[propanol] = [m][m][m][oh]
+[butanol] = [m][m][m][m][oh]
+
+# ═══════════════════════════════════════════════════════════════
+#  REUSE IN DIFFERENT POSITIONS
+# ═══════════════════════════════════════════════════════════════
+
+[x] = [C][C]
+
+[prefix] = [x][N]
+[suffix] = [N][x]
+[middle] = [N][x][N]
+[both_ends] = [x][N][x]
+[sandwich] = [x][N][x][N][x]
+
+# ═══════════════════════════════════════════════════════════════
+#  NESTED REUSE
+# ═══════════════════════════════════════════════════════════════
+
+[a] = [C]
+[aa] = [a][a]
+[aaaa] = [aa][aa]
+[aaaaaaaa] = [aaaa][aaaa]
+
+# ═══════════════════════════════════════════════════════════════
+#  REUSE WITH DIFFERENT COMPOSITIONS
+# ═══════════════════════════════════════════════════════════════
+
+[core] = [C][C][C]
+
+[core_alcohol] = [core][O]
+[core_amine] = [core][N]
+[core_thiol] = [core][S]
+[core_halide] = [core][Cl]
+[core_all] = [core][O][core][N][core][S]
+
+# ═══════════════════════════════════════════════════════════════
+#  SYMMETRIC STRUCTURES
+# ═══════════════════════════════════════════════════════════════
+
+[end] = [C][O]
+[symmetric1] = [end][C][end]
+[symmetric2] = [end][C][C][end]
+[symmetric3] = [end][C][C][C][end]

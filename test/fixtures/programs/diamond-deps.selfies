@@ -1,0 +1,67 @@
+# Diamond Dependency Test Suite
+# Tests handling of fragments with shared dependencies
+
+# ═══════════════════════════════════════════════════════════════
+#  SIMPLE DIAMOND
+#       A
+#      / \
+#     B   C
+#      \ /
+#       D
+# ═══════════════════════════════════════════════════════════════
+
+[diamond_base] = [C]
+[diamond_left] = [diamond_base][O]
+[diamond_right] = [diamond_base][N]
+[diamond_top] = [diamond_left][diamond_right]
+
+# ═══════════════════════════════════════════════════════════════
+#  DOUBLE DIAMOND
+#        A
+#       /|\
+#      B C D
+#       \|/
+#        E
+#       /|\
+#      F G H
+#       \|/
+#        I
+# ═══════════════════════════════════════════════════════════════
+
+[dd_e] = [C]
+[dd_b] = [dd_e][O]
+[dd_c] = [dd_e][N]
+[dd_d] = [dd_e][S]
+[dd_a] = [dd_b][dd_c][dd_d]
+
+[dd_f] = [dd_a][F]
+[dd_g] = [dd_a][Cl]
+[dd_h] = [dd_a][Br]
+[dd_i] = [dd_f][dd_g][dd_h]
+
+# ═══════════════════════════════════════════════════════════════
+#  SHARED FRAGMENT REUSE
+#  Multiple paths through same intermediate
+# ═══════════════════════════════════════════════════════════════
+
+[shared_core] = [C][C]
+[path_a] = [shared_core][O]
+[path_b] = [shared_core][N]
+[path_c] = [shared_core][S]
+[uses_all_paths] = [path_a][path_b][path_c]
+
+# ═══════════════════════════════════════════════════════════════
+#  WIDE FAN-OUT
+#  One base used by many dependents
+# ═══════════════════════════════════════════════════════════════
+
+[fan_base] = [C]
+[fan_1] = [fan_base][C]
+[fan_2] = [fan_base][N]
+[fan_3] = [fan_base][O]
+[fan_4] = [fan_base][S]
+[fan_5] = [fan_base][F]
+[fan_6] = [fan_base][Cl]
+[fan_7] = [fan_base][Br]
+[fan_8] = [fan_base][I]
+[fan_all] = [fan_1][fan_2][fan_3][fan_4][fan_5][fan_6][fan_7][fan_8]

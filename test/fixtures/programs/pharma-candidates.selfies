@@ -1,0 +1,97 @@
+# Pharma Candidates Test File
+# Tests fragment composition using pharma-core.selfies
+
+import "./pharma-core.selfies"
+
+# ═══════════════════════════════════════════════════════════════
+#  SIMPLE COMPOSITIONS - Basic fragment joining
+# ═══════════════════════════════════════════════════════════════
+
+[methanol] = [methyl][hydroxyl]
+[ethanol] = [ethyl][hydroxyl]
+[propanol] = [propyl][hydroxyl]
+
+[methylamine] = [methyl][amino]
+[ethylamine] = [ethyl][amino]
+
+[acetic_acid] = [methyl][carboxyl]
+[propionic_acid] = [ethyl][carboxyl]
+
+# ═══════════════════════════════════════════════════════════════
+#  HALOGENATED COMPOUNDS
+# ═══════════════════════════════════════════════════════════════
+
+[fluoromethane] = [methyl][fluoro]
+[chloroethane] = [ethyl][chloro]
+[bromopropane] = [propyl][bromo]
+
+# ═══════════════════════════════════════════════════════════════
+#  AROMATIC COMPOUNDS
+# ═══════════════════════════════════════════════════════════════
+
+[toluene] = [methyl][phenyl]
+[ethylbenzene] = [ethyl][phenyl]
+[phenol] = [phenyl][hydroxyl]
+[aniline] = [phenyl][amino]
+[benzoic_acid] = [phenyl][carboxyl]
+[benzaldehyde] = [phenyl][aldehyde]
+
+# ═══════════════════════════════════════════════════════════════
+#  FLUORINATED AROMATICS - Common in drug design
+# ═══════════════════════════════════════════════════════════════
+
+[fluorobenzene] = [phenyl][fluoro]
+[chlorobenzene] = [phenyl][chloro]
+[trifluoromethylbenzene] = [phenyl][trifluoromethyl]
+
+# ═══════════════════════════════════════════════════════════════
+#  HETEROCYCLIC AROMATICS
+# ═══════════════════════════════════════════════════════════════
+
+[methylpyridine] = [methyl][pyridine]
+[methylimidazole] = [methyl][imidazole]
+
+# ═══════════════════════════════════════════════════════════════
+#  SATURATED HETEROCYCLES - Drug scaffolds
+# ═══════════════════════════════════════════════════════════════
+
+[methylpiperidine] = [methyl][piperidine]
+[methylpiperazine] = [methyl][piperazine]
+[methylmorpholine] = [methyl][morpholine]
+[methylpyrrolidine] = [methyl][pyrrolidine]
+
+# ═══════════════════════════════════════════════════════════════
+#  SULFONAMIDES - Antibiotic class
+# ═══════════════════════════════════════════════════════════════
+
+[phenylsulfonamide] = [phenyl][sulfonamide]
+[methylsulfonamide] = [methyl][sulfonamide]
+
+# ═══════════════════════════════════════════════════════════════
+#  MULTI-FRAGMENT COMPOSITIONS
+# ═══════════════════════════════════════════════════════════════
+
+# Phenyl + linker + heterocycle patterns
+[phenyl_piperidine] = [phenyl][piperidine]
+[phenyl_piperazine] = [phenyl][piperazine]
+[phenyl_morpholine] = [phenyl][morpholine]
+
+# Fluorinated scaffolds
+[fluorophenyl_piperazine] = [fluoro][phenyl][piperazine]
+[trifluoromethyl_phenyl_piperidine] = [trifluoromethyl][phenyl][piperidine]
+
+# ═══════════════════════════════════════════════════════════════
+#  DRUG-LIKE SCAFFOLDS
+# ═══════════════════════════════════════════════════════════════
+
+# Biphenyl core
+[biphenyl] = [phenyl][phenyl]
+
+# Benzyl alcohol
+[benzyl_alcohol] = [phenyl][methyl][hydroxyl]
+
+# Phenethylamine - neurotransmitter scaffold  
+[phenethylamine] = [phenyl][ethyl][amino]
+
+# Benzoyl group compositions
+[acetophenone] = [phenyl][methyl][carbonyl]
