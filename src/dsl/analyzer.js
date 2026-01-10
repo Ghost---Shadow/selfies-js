@@ -25,15 +25,58 @@ export function getDependencies(program, name) {
 
   const dependencies = []
   for (const token of definition.tokens) {
-    const tokenName = token.slice(1, -1) // Remove brackets
-    if (program.definitions.has(tokenName)) {
-      if (!dependencies.includes(tokenName)) {
-        dependencies.push(tokenName)
+    if (typeof token === 'object' && token.type === 'REPEAT_CALL') {
+      // Extract dependencies from repeat pattern
+      const patternTokens = tokenizePattern(token.pattern)
+      for (const patternToken of patternTokens) {
+        const tokenName = patternToken.slice(1, -1) // Remove brackets
+        if (program.definitions.has(tokenName)) {
+          if (!dependencies.includes(tokenName)) {
+            dependencies.push(tokenName)
+          }
+        }
+      }
+    } else if (typeof token === 'string') {
+      const tokenName = token.slice(1, -1) // Remove brackets
+      if (program.definitions.has(tokenName)) {
+        if (!dependencies.includes(tokenName)) {
+          dependencies.push(tokenName)
+        }
       }
     }
   }
 
   return dependencies
+}
+
+/**
+ * Tokenizes a pattern string into SELFIES tokens
+ * @param {string} pattern - Pattern string like '[C][=C]'
+ * @returns {string[]} Array of tokens
+ */
+function tokenizePattern(pattern) {
+  const tokens = []
+  let i = 0
+
+  while (i < pattern.length) {
+    if (pattern[i] === '[') {
+      // Find the closing bracket
+      let j = i + 1
+      while (j < pattern.length && pattern[j] !== ']') {
+        j++
+      }
+      if (j < pattern.length) {
+        tokens.push(pattern.slice(i, j + 1))
+        i = j + 1
+      } else {
+        i++
+      }
+    } else {
+      i++
+    }
+  }
+
+  return tokens
 }
 
 /**

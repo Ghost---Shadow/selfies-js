@@ -112,6 +112,11 @@ selfies list molecules.selfies
 # Reference other fragments
 [ethanol] = [ethyl][hydroxyl]
 
+# Use repeat() macro for patterns
+[benzene] = repeat([C][=C], 3)[Ring1][=Branch1]
+[carbon_chain] = repeat([C], 10)
+[polymer] = repeat([monomer], 5)
+
 # Import from other files
 import "./other-file.selfies"                    # import all
 import [methyl, ethyl] from "./fragments.selfies" # import specific
@@ -155,6 +160,33 @@ import { renderSelfies, initRDKit } from 'selfies-js'
 await initRDKit()
 const svg = await renderSelfies('[C][C][O]', { width: 300, height: 300 })
 ```
+
+## Repeat Macro
+
+The `repeat()` macro allows you to repeat molecular patterns, perfect for polymers and long chains:
+
+```selfies
+# Benzene ring
+[benzene] = repeat([C][=C], 3)[Ring1][=Branch1]
+
+# Carbon chains
+[decane] = repeat([C], 10)
+[pentadecane] = repeat([C], 15)
+
+# Polymer repeat units
+[PE_unit] = [C][C]
+[polyethylene_trimer] = repeat([PE_unit], 3)
+
+# References work too
+[monomer] = [C][Branch1][C][Cl][C]
+[pvc_hexamer] = repeat([monomer], 6)
+```
+
+The pattern can be:
+- **Primitive tokens**: `repeat([C], 10)` for a 10-carbon chain
+- **Complex patterns**: `repeat([C][=C], 3)` for alternating double bonds
+- **Named references**: `repeat([unit], 5)` to repeat a defined fragment
+- **Combined**: `[molecule] = [N]repeat([C], 3)[O]` with tokens before/after
 
 ## VS Code Extension
 

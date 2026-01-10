@@ -222,18 +222,37 @@ function parseRepeatCall(tokens, startIndex) {
   }
   i++
 
-  // Expect STRING (pattern)
-  if (i >= tokens.length || tokens[i].type !== TokenType.STRING) {
-    // Skip to closing paren or end of line on error
+  // Collect SELFIES_TOKENs as pattern until we hit COMMA
+  const patternTokens = []
+  const patternStart = i
+
+  while (i < tokens.length &&
+         tokens[i].type !== TokenType.COMMA &&
+         tokens[i].type !== TokenType.RPAREN &&
+         tokens[i].type !== TokenType.NEWLINE &&
+         tokens[i].type !== TokenType.EOF) {
+    if (tokens[i].type === TokenType.SELFIES_TOKEN) {
+      patternTokens.push(tokens[i].value)
+      i++
+    } else {
+      const skipToEnd = skipToRParenOrEOL(tokens, i)
+      return {
+        error: createDiagnostic('Expected SELFIES tokens or name references in pattern', 'error', tokens[i]),
+        nextIndex: skipToEnd
+      }
+    }
+  }
+
+  if (patternTokens.length === 0) {
     const skipToEnd = skipToRParenOrEOL(tokens, i)
     return {
-      error: createDiagnostic('Expected string pattern as first argument', 'error', tokens[i] || repeatToken),
+      error: createDiagnostic('Pattern cannot be empty', 'error', tokens[patternStart] || repeatToken),
       nextIndex: skipToEnd
     }
   }
-  const patternToken = tokens[i]
-  const pattern = patternToken.value.slice(1, -1) // Remove quotes
-  i++
+
+  // Join pattern tokens into a single string
+  const pattern = patternTokens.join('')
 
   // Expect COMMA
   if (i >= tokens.length || tokens[i].type !== TokenType.COMMA) {

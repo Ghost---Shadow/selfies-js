@@ -30,3 +30,12 @@
 # Polyester building blocks
 [ethylene_glycol] = [C][C][hydroxyl][hydroxyl]
 [terephthalic_acid] = [phenyl][carboxyl][carboxyl]
+
+# Using repeat() macro for polymer chains
+[PE_trimer] = repeat([PE_unit], 3)
+[PP_pentamer] = repeat([PP_unit], 5)
+[PS_tetramer] = repeat([PS_unit], 4)
+[PVC_hexamer] = repeat([PVC_unit], 6)
+
+# Carbon chain using repeat
+[decane_chain] = repeat([C], 10)

@@ -14,6 +14,12 @@
 [pentane] = [m][m][m][m][m]
 [hexane] = [m][m][m][m][m][m]
 
+# Same patterns using repeat() macro
+[heptane] = repeat([m], 7)
+[octane] = repeat([m], 8)
+[nonane] = repeat([m], 9)
+[decane] = repeat([m], 10)
+
 # ═══════════════════════════════════════════════════════════════
 #  REUSE ACROSS MULTIPLE DEFINITIONS
 # ═══════════════════════════════════════════════════════════════
@@ -45,6 +51,10 @@
 [aa] = [a][a]
 [aaaa] = [aa][aa]
 [aaaaaaaa] = [aaaa][aaaa]
+
+# Using repeat for longer chains
+[a16] = repeat([a], 16)
+[a32] = repeat([a], 32)
 
 # ═══════════════════════════════════════════════════════════════
 #  REUSE WITH DIFFERENT COMPOSITIONS
