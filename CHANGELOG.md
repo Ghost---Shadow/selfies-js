@@ -5,12 +5,25 @@ All notable changes to the `selfies-js` package will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.4] - 2026-01-10
+
+### Changed
+- **Improved repeat macro syntax** - Removed quote requirement for cleaner DSL
+  - Old syntax: `repeat('[C][=C]', 3)` ❌
+  - New syntax: `repeat([C][=C], 3)` ✅
+  - Updated all test fixtures to use quote-free syntax
+  - Updated README.md with new syntax examples
+  - Fixed VSCode syntax highlighter to recognize repeat macro
+
+### Fixed
+- **Analyzer dependency tracking** - Fixed `getDependencies()` to handle REPEAT_CALL token objects
+
 ## [0.3.3] - 2026-01-10
 
 ### Added
 - **`repeat()` macro for DSL** - New macro for repeating molecular patterns
-  - Syntax: `repeat('pattern', count)` - repeats a SELFIES pattern N times
-  - Example: `[benzene] = repeat('[C][=C]', 3)[Ring1][=Branch1]`
+  - Syntax: `repeat([C][=C], 3)` - repeats a SELFIES pattern N times
+  - Example: `[benzene] = repeat([C][=C], 3)[Ring1][=Branch1]`
   - Supports references to other definitions within patterns
   - Can be combined with regular tokens: `[molecule] = [N]repeat('[C]', 3)[O]`
   - Multiple repeat calls in single definition supported
