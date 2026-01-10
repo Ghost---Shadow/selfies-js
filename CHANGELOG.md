@@ -5,6 +5,36 @@ All notable changes to the `selfies-js` package will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.3] - 2026-01-10
+
+### Added
+- **`repeat()` macro for DSL** - New macro for repeating molecular patterns
+  - Syntax: `repeat('pattern', count)` - repeats a SELFIES pattern N times
+  - Example: `[benzene] = repeat('[C][=C]', 3)[Ring1][=Branch1]`
+  - Supports references to other definitions within patterns
+  - Can be combined with regular tokens: `[molecule] = [N]repeat('[C]', 3)[O]`
+  - Multiple repeat calls in single definition supported
+  - Comprehensive error handling for invalid syntax and arguments
+- **12 new tests** for repeat macro functionality in `src/dsl/resolver.test.js`
+  - Simple and complex patterns
+  - Reference resolution in patterns
+  - Polymer chain examples
+  - Edge cases and error validation
+
+### Changed
+- **Lexer** (`src/dsl/lexer.js`):
+  - Added token types: `REPEAT`, `LPAREN`, `RPAREN`, `NUMBER`
+  - Added support for single-quoted strings
+  - Added support for negative numbers
+- **Parser** (`src/dsl/parser.js`):
+  - New `parseRepeatCall()` function to parse repeat syntax
+  - Added `skipToRParenOrEOL()` helper for error recovery
+  - Updated definition parsing to handle repeat calls
+- **Resolver** (`src/dsl/resolver.js`):
+  - New `expandRepeat()` function to expand repeat calls
+  - New `tokenizePattern()` to parse pattern strings
+  - Added validation for empty definitions
+
 ## [0.2.0] - 2026-01-09
 
 ### Fixed
@@ -36,5 +66,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - CLI tool
 - 552 tests
 
+[0.3.3]: https://github.com/Ghost---Shadow/selfies-js/compare/v0.2.0...v0.3.3
 [0.2.0]: https://github.com/Ghost---Shadow/selfies-js/compare/v0.1.3...v0.2.0
 [0.1.3]: https://github.com/Ghost---Shadow/selfies-js/releases/tag/v0.1.3

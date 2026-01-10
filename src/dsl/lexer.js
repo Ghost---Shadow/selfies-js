@@ -20,11 +20,17 @@ export const TokenType = {
   // Import-related tokens
   IMPORT: 'IMPORT',       // import keyword
   FROM: 'FROM',           // from keyword
-  STRING: 'STRING',       // "path/to/file.selfies"
+  STRING: 'STRING',       // "path/to/file.selfies" or 'pattern'
   STAR: 'STAR',           // * (wildcard import)
   COMMA: 'COMMA',         // , (separator in selective imports)
   LBRACKET: 'LBRACKET',   // [ (for selective import list)
   RBRACKET: 'RBRACKET',   // ] (for selective import list)
+
+  // Repeat macro tokens
+  REPEAT: 'REPEAT',       // repeat keyword
+  LPAREN: 'LPAREN',       // (
+  RPAREN: 'RPAREN',       // )
+  NUMBER: 'NUMBER',       // numeric literal
 }
 
 /**
@@ -135,14 +141,43 @@ export function lex(source) {
       continue
     }
 
-    // String literal (for import paths)
-    if (char === '"') {
+    // Left parenthesis
+    if (char === '(') {
+      tokens.push({
+        type: TokenType.LPAREN,
+        value: '(',
+        line,
+        column,
+        range: [i, i + 1]
+      })
+      i++
+      column++
+      continue
+    }
+
+    // Right parenthesis
+    if (char === ')') {
+      tokens.push({
+        type: TokenType.RPAREN,
+        value: ')',
+        line,
+        column,
+        range: [i, i + 1]
+      })
+      i++
+      column++
+      continue
+    }
+
+    // String literal (for import paths and repeat patterns)
+    if (char === '"' || char === "'") {
       const stringStart = i
-      let stringValue = '"'
+      const quote = char
+      let stringValue = quote
       i++
       column++
 
-      while (i < source.length && source[i] !== '"' && source[i] !== '\n') {
+      while (i < source.length && source[i] !== quote && source[i] !== '\n') {
         stringValue += source[i]
         i++
         column++
@@ -152,7 +187,7 @@ export function lex(source) {
         throw new Error(`Unclosed string at line ${line}, column ${startColumn}`)
       }
 
-      stringValue += '"'
+      stringValue += quote
       i++
       column++
 
@@ -166,7 +201,7 @@ export function lex(source) {
       continue
     }
 
-    // Keywords and identifiers (import, from)
+    // Keywords and identifiers (import, from, repeat)
     if (isAlpha(char)) {
       const wordStart = i
       let wordValue = ''
@@ -182,6 +217,8 @@ export function lex(source) {
         type = TokenType.IMPORT
       } else if (wordValue === 'from') {
         type = TokenType.FROM
+      } else if (wordValue === 'repeat') {
+        type = TokenType.REPEAT
       }
 
       tokens.push({
@@ -190,6 +227,34 @@ export function lex(source) {
         line,
         column: startColumn,
         range: [wordStart, i]
+      })
+      continue
+    }
+
+    // Numbers (including negative)
+    if (char >= '0' && char <= '9' || (char === '-' && i + 1 < source.length && source[i + 1] >= '0' && source[i + 1] <= '9')) {
+      const numberStart = i
+      let numberValue = ''
+
+      // Handle negative sign
+      if (char === '-') {
+        numberValue += char
+        i++
+        column++
+      }
+
+      while (i < source.length && source[i] >= '0' && source[i] <= '9') {
+        numberValue += source[i]
+        i++
+        column++
+      }
+
+      tokens.push({
+        type: TokenType.NUMBER,
+        value: numberValue,
+        line,
+        column: startColumn,
+        range: [numberStart, i]
       })
       continue
     }

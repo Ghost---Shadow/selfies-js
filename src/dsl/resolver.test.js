@@ -97,3 +97,86 @@ describe('resolveAll', () => {
     expect(resolved.size).toBe(0)
   })
 })
+
+describe('repeat macro', () => {
+  test('repeats a simple token sequence', () => {
+    const program = parse('[triple_carbon] = repeat(\'[C]\', 3)')
+    expect(resolve(program, 'triple_carbon')).toBe('[C][C][C]')
+  })
+
+  test('repeats a complex token sequence', () => {
+    const program = parse('[benzene] = repeat(\'[C][=C]\', 3)[Ring1][=Branch1]')
+    expect(resolve(program, 'benzene')).toBe('[C][=C][C][=C][C][=C][Ring1][=Branch1]')
+  })
+
+  test('repeats with count of 1', () => {
+    const program = parse('[single] = repeat(\'[C][O]\', 1)')
+    expect(resolve(program, 'single')).toBe('[C][O]')
+  })
+
+  test('repeats with count of 0 produces empty sequence', () => {
+    const program = parse('[empty] = [C]repeat(\'[O]\', 0)[C]')
+    expect(resolve(program, 'empty')).toBe('[C][C]')
+  })
+
+  test('repeat with reference to other definition', () => {
+    const source = '[unit] = [C][=C]\n[triple] = repeat(\'[unit]\', 3)'
+    const program = parse(source)
+    expect(resolve(program, 'triple')).toBe('[C][=C][C][=C][C][=C]')
+  })
+
+  test('multiple repeat calls in one definition', () => {
+    const program = parse('[chain] = repeat(\'[C]\', 2)repeat(\'[O]\', 2)')
+    expect(resolve(program, 'chain')).toBe('[C][C][O][O]')
+  })
+
+  test('repeat combined with regular tokens', () => {
+    const program = parse('[molecule] = [N]repeat(\'[C]\', 3)[O]')
+    expect(resolve(program, 'molecule')).toBe('[N][C][C][C][O]')
+  })
+
+  test('repeat with nested brackets in pattern', () => {
+    const program = parse('[branched] = repeat(\'[C][Branch1][C][O]\', 2)')
+    expect(resolve(program, 'branched')).toBe('[C][Branch1][C][O][C][Branch1][C][O]')
+  })
+
+  test('throws error on invalid repeat count', () => {
+    const program = parse('[bad] = repeat(\'[C]\', -1)')
+    expect(() => resolve(program, 'bad')).toThrow(/count must be/)
+  })
+
+  test('throws error on non-numeric count', () => {
+    const program = parse('[bad] = repeat(\'[C]\', abc)')
+    expect(() => resolve(program, 'bad')).toThrow()
+  })
+
+  test('throws error on missing arguments', () => {
+    const program = parse('[bad] = repeat(\'[C]\')')
+    expect(() => resolve(program, 'bad')).toThrow()
+  })
+
+  test('throws error on malformed repeat syntax', () => {
+    const program = parse('[bad] = repeat([C], 3)')
+    expect(() => resolve(program, 'bad')).toThrow()
+  })
+
+  test('simple polymer-like chain', () => {
+    const source = '[ch2] = [C]\n[polymer_chain] = repeat(\'[ch2]\', 5)'
+    const program = parse(source)
+    expect(resolve(program, 'polymer_chain')).toBe('[C][C][C][C][C]')
+  })
+
+  test('polymer chain with decode', () => {
+    const source = '[ch2] = [C]\n[polymer_chain] = repeat(\'[ch2]\', 5)'
+    const program = parse(source)
+    expect(resolve(program, 'polymer_chain', { decode: true })).toBe('CCCCC')
+  })
+
+  test('vinyl chloride monomer units', () => {
+    // Each monomer as a branch structure for proper chemistry
+    const source = '[monomer] = [C][Branch1][C][Cl][C]\n[polymer] = repeat(\'[monomer]\', 3)'
+    const program = parse(source)
+    // This creates a branched structure: C(Cl)CC(Cl)CC(Cl)C
+    expect(resolve(program, 'polymer')).toBe('[C][Branch1][C][Cl][C][C][Branch1][C][Cl][C][C][Branch1][C][Cl][C]')
+  })
+})

@@ -1,6 +1,6 @@
 {
   "name": "selfies-js",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "description": "Pure JavaScript SELFIES encoder/decoder with DSL for molecular composition",
   "type": "module",
   "main": "src/index.js",

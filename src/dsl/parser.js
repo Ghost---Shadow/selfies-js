@@ -131,7 +131,7 @@ function parseDefinition(tokens, startIndex) {
   }
   i++
 
-  // 3. Collect SELFIES_TOKENs until NEWLINE or EOF
+  // 3. Collect SELFIES_TOKENs and repeat calls until NEWLINE or EOF
   const definitionTokens = []
   const tokenStart = nameToken.range[0]
   let tokenEnd = tokens[i - 1].range[1]
@@ -144,6 +144,17 @@ function parseDefinition(tokens, startIndex) {
       definitionTokens.push(tokens[i].value)
       tokenEnd = tokens[i].range[1]
       i++
+    } else if (tokens[i].type === TokenType.REPEAT) {
+      // Parse repeat call: repeat(pattern, count)
+      const repeatResult = parseRepeatCall(tokens, i)
+      if (repeatResult.error) {
+        errors.push(repeatResult.error)
+        i = repeatResult.nextIndex
+      } else {
+        definitionTokens.push(repeatResult.repeatToken)
+        tokenEnd = repeatResult.range[1]
+        i = repeatResult.nextIndex
+      }
     } else {
       errors.push(createDiagnostic(
         `Unexpected token in definition body: ${tokens[i].type}`,
@@ -181,6 +192,114 @@ function parseDefinition(tokens, startIndex) {
   }
 
   return { definition, errors, nextIndex: i }
+}
+
+/**
+ * Parses a repeat call: repeat(pattern, count)
+ * @param {Object[]} tokens - Token array
+ * @param {number} startIndex - Index of REPEAT token
+ * @returns {Object} Result with repeatToken or error
+ */
+function parseRepeatCall(tokens, startIndex) {
+  let i = startIndex
+  const repeatToken = tokens[i]
+
+  // Expect REPEAT
+  if (tokens[i].type !== TokenType.REPEAT) {
+    return {
+      error: createDiagnostic('Expected repeat keyword', 'error', tokens[i]),
+      nextIndex: i + 1
+    }
+  }
+  i++
+
+  // Expect LPAREN
+  if (i >= tokens.length || tokens[i].type !== TokenType.LPAREN) {
+    return {
+      error: createDiagnostic('Expected \'(\' after repeat', 'error', tokens[i] || repeatToken),
+      nextIndex: i
+    }
+  }
+  i++
+
+  // Expect STRING (pattern)
+  if (i >= tokens.length || tokens[i].type !== TokenType.STRING) {
+    // Skip to closing paren or end of line on error
+    const skipToEnd = skipToRParenOrEOL(tokens, i)
+    return {
+      error: createDiagnostic('Expected string pattern as first argument', 'error', tokens[i] || repeatToken),
+      nextIndex: skipToEnd
+    }
+  }
+  const patternToken = tokens[i]
+  const pattern = patternToken.value.slice(1, -1) // Remove quotes
+  i++
+
+  // Expect COMMA
+  if (i >= tokens.length || tokens[i].type !== TokenType.COMMA) {
+    const skipToEnd = skipToRParenOrEOL(tokens, i)
+    return {
+      error: createDiagnostic('Expected \',\' after pattern', 'error', tokens[i] || patternToken),
+      nextIndex: skipToEnd
+    }
+  }
+  i++
+
+  // Expect NUMBER (count)
+  if (i >= tokens.length || tokens[i].type !== TokenType.NUMBER) {
+    const skipToEnd = skipToRParenOrEOL(tokens, i)
+    return {
+      error: createDiagnostic('Expected number as second argument', 'error', tokens[i] || patternToken),
+      nextIndex: skipToEnd
+    }
+  }
+  const countToken = tokens[i]
+  const count = parseInt(countToken.value, 10)
+  i++
+
+  // Expect RPAREN
+  if (i >= tokens.length || tokens[i].type !== TokenType.RPAREN) {
+    const skipToEnd = skipToRParenOrEOL(tokens, i)
+    return {
+      error: createDiagnostic('Expected \')\' after count', 'error', tokens[i] || countToken),
+      nextIndex: skipToEnd
+    }
+  }
+  const rparenToken = tokens[i]
+  i++
+
+  // Create a special repeat token
+  return {
+    repeatToken: {
+      type: 'REPEAT_CALL',
+      pattern,
+      count,
+      range: [repeatToken.range[0], rparenToken.range[1]]
+    },
+    range: [repeatToken.range[0], rparenToken.range[1]],
+    nextIndex: i
+  }
+}
+
+/**
+ * Skips tokens until we find RPAREN or reach end of line
+ * @param {Object[]} tokens - Token array
+ * @param {number} startIndex - Index to start skipping from
+ * @returns {number} Index after RPAREN or at NEWLINE/EOF
+ */
+function skipToRParenOrEOL(tokens, startIndex) {
+  let i = startIndex
+  while (i < tokens.length &&
+         tokens[i].type !== TokenType.RPAREN &&
+         tokens[i].type !== TokenType.NEWLINE &&
+         tokens[i].type !== TokenType.EOF) {
+    i++
+  }
+  // If we found RPAREN, move past it
+  if (i < tokens.length && tokens[i].type === TokenType.RPAREN) {
+    i++
+  }
+  return i
 }
 
 /**
